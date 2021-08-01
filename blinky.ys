@@ -1,0 +1,3 @@
+read_verilog top.v pll.v
+synth_ice40 -top top
+write_json blinky.json
