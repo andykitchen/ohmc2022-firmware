@@ -40,7 +40,7 @@ import os
 #from rtl.romgen import RandomFirmwareROM, FirmwareROM
 #from rtl.fomutouch import TouchPads
 #from rtl.sbled import SBLED
-#from rtl.sbwarmboot import SBWarmBoot
+from rtl.sbwarmboot import SBWarmBoot
 #from rtl.messible import Messible
 
 
@@ -184,15 +184,11 @@ class BaseSoC(SoCCore, AutoDoc):
         usb_iobuf = usbio.IoBuf(usb_pads.d_p, usb_pads.d_n, usb_pads.pullup)
 
         self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug, relax_timing=True, product="Rockling Theremin Debug", manufacturer="OHMC2022")
-        self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug)
 
         if usb_debug:
             self.add_wb_master(self.usb.debug_bridge.wishbone)
 
-        #if hasattr(usb_pads, "pulldown"):
-        #    pulldown = TSTriple()
-        #    self.specials += pulldown.get_tristate(usb_pads.pulldown)
-        #    self.comb += pulldown.oe.eq(0)
+        self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
         # Override default LiteX's yosys/build templates
         assert hasattr(platform.toolchain, "yosys_template")
