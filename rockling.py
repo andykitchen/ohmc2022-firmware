@@ -230,7 +230,7 @@ def main():
 
     platform = Platform(revision="hacker")
     soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type=None, usb_debug=True)
-    builder = Builder(soc)
+    builder = Builder(soc, csr_csv="build/csr.csv")
     soc.do_exit(builder.build())
 
 
