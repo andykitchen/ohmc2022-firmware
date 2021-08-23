@@ -183,6 +183,7 @@ class BaseSoC(SoCCore, AutoDoc):
         usb_pads = platform.request("usb")
         usb_iobuf = usbio.IoBuf(usb_pads.d_p, usb_pads.d_n, usb_pads.pullup)
 
+        self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug, relax_timing=True, product="Rockling Theremin Debug", manufacturer="OHMC2022")
         self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug)
 
         if usb_debug:
