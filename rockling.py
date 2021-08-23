@@ -174,7 +174,7 @@ class _CRG(Module, AutoDoc):
 
 
 class BaseSoC(SoCCore, AutoDoc):
-    def __init__(self, platform, pnr_seed=0, usb_debug=True, **kwargs):
+    def __init__(self, platform, pnr_seed=0xFADE, usb_debug=True, **kwargs):
         clk_freq = int(12e6)
         self.submodules.crg = _CRG(platform)
 
@@ -229,7 +229,7 @@ class BaseSoC(SoCCore, AutoDoc):
 
 def main():
     parser = argparse.ArgumentParser("Build Rockling Gateware")
-    parser.add_argument("--seed", default=0, type=int, help="seed to use in nextpnr")
+    parser.add_argument("--seed", default=0xFADE, type=int, help="seed to use in nextpnr")
     args = parser.parse_args()
 
     platform = Platform(revision="hacker")
