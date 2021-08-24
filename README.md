@@ -44,3 +44,4 @@ See Also:
 
 -   [ValentyUSB](https://github.com/im-tomu/valentyusb)
 -   [wishbone-utils](https://github.com/litex-hub/wishbone-utils)
+-   [LiteX CSRs: A Developer's Overview](https://github.com/enjoy-digital/litex/wiki/CSR-Bus)
