@@ -203,11 +203,13 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.i2c = RTLI2C(platform, i2c_pads0)
         #self.submodules.i2c = HardI2C(platform, i2c_pads)
 
-        #self.integrated_rom_size = bios_size = 0x2000
-        #bios_file = 'bios.bin'
-        #self.submodules.firmware_rom = FirmwareROM(bios_size, bios_file)
-        #self.submodules.firmware_rom = wishbone.SRAM(bios_size, read_only=True, init=[0xDEADBEEF]*(bios_size//4))
-        #self.register_rom(self.firmware_rom.bus, bios_size)
+        if hasattr(self, "cpu") and not isinstance(self.cpu, CPUNone):
+            bios_size = 0x2000
+            bios_file = 'bios.bin'
+            self.integrated_rom_size = bios_size
+            #self.submodules.firmware_rom = FirmwareROM(bios_size, bios_file)
+            self.submodules.firmware_rom = wishbone.SRAM(bios_size, read_only=True, init=[0xDEADBEEF]*(bios_size//4))
+            self.register_rom(self.firmware_rom.bus, bios_size)
 
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
@@ -258,11 +260,14 @@ def main():
     parser = argparse.ArgumentParser("Build Rockling Gateware")
     parser.add_argument("--seed", default=0xFADE, type=int, help="seed to use in nextpnr")
     parser.add_argument("--revision", default="rockling_evt", help="platform revision")
+    parser.add_argument("--with-cpu", help="include a CPU", action="store_true")
     args = parser.parse_args()
 
     platform = Platform(revision=args.revision)
-    #soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type="vexriscv", cpu_variant="minimal+debug", usb_debug=True)
-    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type=None, cpu_variant=None, usb_debug=True)
+    if args.with_cpu:
+	    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type="vexriscv", cpu_variant="minimal+debug", usb_debug=True)
+    else:
+	    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type=None, usb_debug=True)
     builder = Builder(soc, csr_csv="build/csr.csv", compile_software=False, compile_gateware=True)
 
     soc.do_exit(builder.build())
