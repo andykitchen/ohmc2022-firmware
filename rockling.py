@@ -38,7 +38,7 @@ import os
 
 from rtl.version import Version
 #from rtl.romgen import FirmwareROM
-#from rtl.sbled import SBLED
+from rtl.sbled import SBLED
 from rtl.sbwarmboot import SBWarmBoot
 #from rtl.messible import Messible
 from rtl.i2c import RTLI2C
@@ -213,6 +213,7 @@ class BaseSoC(SoCCore, AutoDoc):
 
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
+        self.submodules.rgb = SBLED(platform.revision, platform.request("rgb_led"))
         self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
                 ("0x45", "E", "Fomu EVT"),
                 ("0x44", "D", "Fomu DVT"),
