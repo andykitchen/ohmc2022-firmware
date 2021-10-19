@@ -1,2 +1,1 @@
-from gateware.i2c.core import RTLI2C
-
+from .core import RTLI2C

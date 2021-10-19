@@ -41,6 +41,7 @@ import os
 #from rtl.sbled import SBLED
 from rtl.sbwarmboot import SBWarmBoot
 #from rtl.messible import Messible
+from rtl.i2c import RTLI2C
 
 
 class Platform(LatticePlatform):
@@ -196,6 +197,9 @@ class BaseSoC(SoCCore, AutoDoc):
         spram_size = 128*1024
         self.submodules.spram = Up5kSPRAM(size=spram_size)
         self.register_mem("sram", self.mem_map["sram"], self.spram.bus, spram_size)
+
+        i2c_pads = platform.request("i2c")
+        self.submodules.i2c = RTLI2C(platform, i2c_pads)
 
         #self.integrated_rom_size = bios_size = 0x2000
         #bios_file = 'bios.bin'

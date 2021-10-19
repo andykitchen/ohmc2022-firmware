@@ -131,9 +131,9 @@ class RTLI2C(Module, AutoCSR, AutoDoc):
             o_sda_o    = sda_o,
             o_sda_oen  = sda_oen,
         )
-        platform.add_source(os.path.join("deps", "gateware", "gateware", "i2c", "i2c_controller_defines.v"))
-        platform.add_source(os.path.join("deps", "gateware", "gateware", "i2c", "i2c_controller_bit_ctrl.v"))
-        platform.add_source(os.path.join("deps", "gateware", "gateware", "i2c", "i2c_controller_byte_ctrl.v"))
+        platform.add_source(os.path.join("rtl", "i2c", "i2c_controller_defines.v"))
+        platform.add_source(os.path.join("rtl", "i2c", "i2c_controller_bit_ctrl.v"))
+        platform.add_source(os.path.join("rtl", "i2c", "i2c_controller_byte_ctrl.v"))
         self.comb += [
             sda_i.eq(self.sda.i),
             self.sda.o.eq(sda_o),
