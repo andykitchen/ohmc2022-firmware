@@ -193,9 +193,11 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.spram = Up5kSPRAM(size=spram_size)
         self.register_mem("sram", self.mem_map["sram"], self.spram.bus, spram_size)
 
-        self.integrated_rom_size = bios_size = 0x2000
-        self.submodules.rom = wishbone.SRAM(bios_size, read_only=True, init=[])
-        self.register_rom(self.rom.bus, bios_size)
+        #self.integrated_rom_size = bios_size = 0x2000
+        #bios_file = 'bios.bin'
+        #self.submodules.firmware_rom = FirmwareROM(bios_size, bios_file)
+        #self.submodules.firmware_rom = wishbone.SRAM(bios_size, read_only=True, init=[0xDEADBEEF]*(bios_size//4))
+        #self.register_rom(self.firmware_rom.bus, bios_size)
 
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
@@ -239,7 +241,8 @@ def main():
     args = parser.parse_args()
 
     platform = Platform(revision=args.revision)
-    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type="vexriscv", cpu_variant="minimal+debug", usb_debug=True)
+    #soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type="vexriscv", cpu_variant="minimal+debug", usb_debug=True)
+    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type=None, cpu_variant=None, usb_debug=True)
     builder = Builder(soc, csr_csv="build/csr.csv", compile_software=False, compile_gateware=True)
 
     soc.do_exit(builder.build())
