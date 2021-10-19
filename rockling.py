@@ -199,8 +199,8 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.spram = Up5kSPRAM(size=spram_size)
         self.register_mem("sram", self.mem_map["sram"], self.spram.bus, spram_size)
 
-        i2c_pads = platform.request("i2c")
-        self.submodules.i2c = RTLI2C(platform, i2c_pads)
+        i2c_pads0 = platform.request("i2c", 0)
+        self.submodules.i2c = RTLI2C(platform, i2c_pads0)
         #self.submodules.i2c = HardI2C(platform, i2c_pads)
 
         #self.integrated_rom_size = bios_size = 0x2000

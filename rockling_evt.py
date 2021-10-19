@@ -50,14 +50,16 @@ _io = [
         Subsignal("clk",  Pins("15"), IOStandard("LVCMOS33")),         # GOOD
         Subsignal("dq",   Pins("14 17 18 19"), IOStandard("LVCMOS33")),# GOOD
     ),
+
     ("i2c", 0,
-# I2C 0
-#       Subsignal("scl", Pins("9"),  IOStandard("LVCMOS33")),          # PIN_OK
-#       Subsignal("sda", Pins("10"), IOStandard("LVCMOS33")),          # PIN_OK
-# I2C 1
+        Subsignal("scl", Pins("9"),  IOStandard("LVCMOS33")),          # PIN_OK
+        Subsignal("sda", Pins("10"), IOStandard("LVCMOS33")),          # PIN_OK
+    ),
+
+    ("i2c", 1,
         Subsignal("scl", Pins("31"), IOStandard("LVCMOS33")),          # PIN_OK
         Subsignal("sda", Pins("32"), IOStandard("LVCMOS33")),          # PIN_OK
-    ),
+    )
 ]
 
 # Connectors ------------------------------------------------------------------
