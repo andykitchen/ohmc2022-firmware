@@ -174,11 +174,12 @@ class _CRG(Module, AutoDoc):
 
 
 class BaseSoC(SoCCore, AutoDoc):
+
     def __init__(self, platform, pnr_seed=0xFADE, usb_debug=True, **kwargs):
         clk_freq = int(12e6)
         self.submodules.crg = _CRG(platform)
 
-        SoCCore.__init__(self, platform, clk_freq, with_uart=False, csr_data_width=32, **kwargs)
+        SoCCore.__init__(self, platform, clk_freq, integrated_sram_size=0, with_uart=False, csr_data_width=32, **kwargs)
 
         usb_pads = platform.request("usb")
         usb_iobuf = usbio.IoBuf(usb_pads.d_p, usb_pads.d_n, usb_pads.pullup)
@@ -187,6 +188,14 @@ class BaseSoC(SoCCore, AutoDoc):
 
         if usb_debug:
             self.add_wb_master(self.usb.debug_bridge.wishbone)
+
+        spram_size = 128*1024
+        self.submodules.spram = Up5kSPRAM(size=spram_size)
+        self.register_mem("sram", self.mem_map["sram"], self.spram.bus, spram_size)
+
+        self.integrated_rom_size = bios_size = 0x2000
+        self.submodules.rom = wishbone.SRAM(bios_size, read_only=True, init=[])
+        self.register_rom(self.rom.bus, bios_size)
 
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
@@ -226,11 +235,13 @@ class BaseSoC(SoCCore, AutoDoc):
 def main():
     parser = argparse.ArgumentParser("Build Rockling Gateware")
     parser.add_argument("--seed", default=0xFADE, type=int, help="seed to use in nextpnr")
+    parser.add_argument("--revision", default="evt", help="platform revision")
     args = parser.parse_args()
 
-    platform = Platform(revision="hacker")
-    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type=None, usb_debug=True)
-    builder = Builder(soc, csr_csv="build/csr.csv")
+    platform = Platform(revision=args.revision)
+    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type="vexriscv", cpu_variant="minimal+debug", usb_debug=True)
+    builder = Builder(soc, csr_csv="build/csr.csv", compile_software=False, compile_gateware=True)
+
     soc.do_exit(builder.build())
 
 
