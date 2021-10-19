@@ -36,12 +36,13 @@ import litex.soc.doc as lxsocdoc
 import argparse
 import os
 
-#from rtl.version import Version
+from rtl.version import Version
 #from rtl.romgen import FirmwareROM
 #from rtl.sbled import SBLED
 from rtl.sbwarmboot import SBWarmBoot
 #from rtl.messible import Messible
 from rtl.i2c import RTLI2C
+from rtl.ice40_hard_i2c import HardI2C
 
 
 class Platform(LatticePlatform):
@@ -189,7 +190,7 @@ class BaseSoC(SoCCore, AutoDoc):
         usb_pads = platform.request("usb")
         usb_iobuf = usbio.IoBuf(usb_pads.d_p, usb_pads.d_n, usb_pads.pullup)
 
-        self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug, relax_timing=True, product="Rockling Theremin Debug", manufacturer="OHMC2022")
+        self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug, relax_timing=False, product="Rockling Theremin Debug", manufacturer="OHMC2022")
 
         if usb_debug:
             self.add_wb_master(self.usb.debug_bridge.wishbone)
@@ -200,6 +201,7 @@ class BaseSoC(SoCCore, AutoDoc):
 
         i2c_pads = platform.request("i2c")
         self.submodules.i2c = RTLI2C(platform, i2c_pads)
+        #self.submodules.i2c = HardI2C(platform, i2c_pads)
 
         #self.integrated_rom_size = bios_size = 0x2000
         #bios_file = 'bios.bin'
@@ -208,6 +210,16 @@ class BaseSoC(SoCCore, AutoDoc):
         #self.register_rom(self.firmware_rom.bus, bios_size)
 
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
+
+        self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
+                ("0x45", "E", "Fomu EVT"),
+                ("0x44", "D", "Fomu DVT"),
+                ("0x50", "P", "Fomu PVT (production)"),
+                ("0x48", "H", "Fomu Hacker"),
+                ("0x65", "Q", "Rockling EVT"),
+                ("0x3f", "?", "Unknown model"),
+            ])
+
 
         # Override default LiteX's yosys/build templates
         assert hasattr(platform.toolchain, "yosys_template")
