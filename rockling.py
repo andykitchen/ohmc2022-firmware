@@ -37,8 +37,7 @@ import argparse
 import os
 
 #from rtl.version import Version
-#from rtl.romgen import RandomFirmwareROM, FirmwareROM
-#from rtl.fomutouch import TouchPads
+#from rtl.romgen import FirmwareROM
 #from rtl.sbled import SBLED
 from rtl.sbwarmboot import SBWarmBoot
 #from rtl.messible import Messible
@@ -67,6 +66,11 @@ class Platform(LatticePlatform):
             LatticePlatform.__init__(self, "ice40-up5k-uwg30", _io, _connectors, toolchain="icestorm")
             self.spi_size = 2 * 1024 * 1024
             self.spi_dummy = 4
+        elif revision == "rockling_evt":
+            from rockling_evt import _io, _connectors
+            LatticePlatform.__init__(self, "ice40-up5k-sg48", _io, _connectors, toolchain="icestorm")
+            self.spi_size = 16 * 1024 * 1024
+            self.spi_dummy = 6
         else:
             raise ValueError("Unrecognized revision: {}.  Known values: evt, dvt, pvt, hacker".format(revision))
 
@@ -237,7 +241,7 @@ class BaseSoC(SoCCore, AutoDoc):
 def main():
     parser = argparse.ArgumentParser("Build Rockling Gateware")
     parser.add_argument("--seed", default=0xFADE, type=int, help="seed to use in nextpnr")
-    parser.add_argument("--revision", default="evt", help="platform revision")
+    parser.add_argument("--revision", default="rockling_evt", help="platform revision")
     args = parser.parse_args()
 
     platform = Platform(revision=args.revision)
