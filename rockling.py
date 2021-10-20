@@ -21,6 +21,7 @@ from litex.build.generic_platform import Pins, Subsignal
 from litex.soc.integration.doc import AutoDoc, ModuleDoc
 from litex.soc.integration.soc_core import SoCCore
 from litex.soc.cores.cpu import CPUNone
+from litex.soc.cores.gpio import GPIOTristate
 from litex.soc.integration.builder import Builder
 from litex.soc.interconnect import wishbone
 
@@ -202,9 +203,12 @@ class BaseSoC(SoCCore, AutoDoc):
         # default depth seems to cause timing problems
         self.submodules.messible = Messible(depth=16)
 
-        i2c_pads0 = platform.request("i2c", 0)
-        self.submodules.i2c = RTLI2C(platform, i2c_pads0)
-        #self.submodules.i2c = HardI2C(platform, i2c_pads)
+        self.submodules.gpio = GPIOTristate(platform.request("gpio_test"))
+
+        #i2c_pads0 = platform.request("i2c", 0)
+        #i2c_pads1 = platform.request("i2c", 1)
+        #self.submodules.i2c = RTLI2C(platform, i2c_pads0)
+        #self.submodules.i2c = HardI2C(platform, i2c_pads0)
 
         if hasattr(self, "cpu") and not isinstance(self.cpu, CPUNone):
             bios_size = 0x2000

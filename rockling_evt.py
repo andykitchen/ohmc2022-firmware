@@ -59,7 +59,9 @@ _io = [
     ("i2c", 1,
         Subsignal("scl", Pins("31"), IOStandard("LVCMOS33")),          # PIN_OK
         Subsignal("sda", Pins("32"), IOStandard("LVCMOS33")),          # PIN_OK
-    )
+    ),
+
+    ("gpio_test", 0, Pins("31 32"), IOStandard("LVCMOS33"))
 ]
 
 # Connectors ------------------------------------------------------------------
