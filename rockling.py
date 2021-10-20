@@ -37,10 +37,10 @@ import argparse
 import os
 
 from rtl.version import Version
-#from rtl.romgen import FirmwareROM
+from rtl.romgen import FirmwareROM
 from rtl.sbled import SBLED
 from rtl.sbwarmboot import SBWarmBoot
-#from rtl.messible import Messible
+from rtl.messible import Messible
 from rtl.i2c import RTLI2C
 from rtl.ice40_hard_i2c import HardI2C
 
@@ -190,7 +190,7 @@ class BaseSoC(SoCCore, AutoDoc):
         usb_pads = platform.request("usb")
         usb_iobuf = usbio.IoBuf(usb_pads.d_p, usb_pads.d_n, usb_pads.pullup)
 
-        self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug, relax_timing=False, product="Rockling Theremin Debug", manufacturer="OHMC2022")
+        self.submodules.usb = dummyusb.DummyUsb(usb_iobuf, debug=usb_debug, relax_timing=True, product="Rockling Theremin Debug", manufacturer="OHMC2022")
 
         if usb_debug:
             self.add_wb_master(self.usb.debug_bridge.wishbone)
@@ -198,6 +198,9 @@ class BaseSoC(SoCCore, AutoDoc):
         spram_size = 128*1024
         self.submodules.spram = Up5kSPRAM(size=spram_size)
         self.register_mem("sram", self.mem_map["sram"], self.spram.bus, spram_size)
+
+        # default depth seems to cause timing problems
+        self.submodules.messible = Messible(depth=16)
 
         i2c_pads0 = platform.request("i2c", 0)
         self.submodules.i2c = RTLI2C(platform, i2c_pads0)
@@ -214,15 +217,15 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
         self.submodules.rgb = SBLED(platform.revision, platform.request("rgb_led"))
-        self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
-                ("0x45", "E", "Fomu EVT"),
-                ("0x44", "D", "Fomu DVT"),
-                ("0x50", "P", "Fomu PVT (production)"),
-                ("0x48", "H", "Fomu Hacker"),
-                ("0x65", "Q", "Rockling EVT"),
-                ("0x3f", "?", "Unknown model"),
-            ])
 
+        #self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
+        #        ("0x45", "E", "Fomu EVT"),
+        #        ("0x44", "D", "Fomu DVT"),
+        #        ("0x50", "P", "Fomu PVT (production)"),
+        #        ("0x48", "H", "Fomu Hacker"),
+        #        ("0x65", "Q", "Rockling EVT"),
+        #        ("0x3f", "?", "Unknown model"),
+        #    ])
 
         # Override default LiteX's yosys/build templates
         assert hasattr(platform.toolchain, "yosys_template")
@@ -244,7 +247,7 @@ class BaseSoC(SoCCore, AutoDoc):
         # and the "-dffe_min_ce_use 4" flag prevents Yosys from generating a
         # Clock Enable signal for a LUT that has fewer than 4 flip-flops.
         # This increases density, and lets us use the FPGA more efficiently.
-        platform.toolchain.yosys_template[2] += " -relut -abc2 -dffe_min_ce_use 4 -relut"
+        #platform.toolchain.yosys_template[2] += " -relut -abc2 -dffe_min_ce_use 4 -relut"
 
         # Disable final deep-sleep power down so firmware words are loaded
         # onto softcore's address bus.
@@ -253,8 +256,8 @@ class BaseSoC(SoCCore, AutoDoc):
         # Allow us to set the nextpnr seed
         platform.toolchain.build_template[1] += " --seed " + str(pnr_seed)
 
-        placer = "heap"
-        platform.toolchain.build_template[1] += " --placer {}".format(placer)
+        #placer = "heap"
+        #platform.toolchain.build_template[1] += " --placer {}".format(placer)
 
 
 def main():
