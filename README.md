@@ -40,8 +40,23 @@ csr_register,reboot_ctrl,0x00000800,1,rw
 
 This CSR register is created in `rtl/sbwarmboot.py`
 
-See Also:
+## I2C test scripts
+
+There are i2c test scripts in the `tools` directory, they should be run
+from the top-level e.g.
+
+```
+$ ./tools/i2c_probe.sh
+$ ./tools/i2c_test_dac.sh
+$ ./tools/i2c_test_codec.sh
+```
+
+The 8th bit of the `i2c_status` register is the `RxACK` bit,
+it is 0 if an `ACK`, 1 if `NACK`.
+
+## See Also:
 
 -   [ValentyUSB](https://github.com/im-tomu/valentyusb)
 -   [wishbone-utils](https://github.com/litex-hub/wishbone-utils)
+    - [wishbone-tool precompiled binaries](https://github.com/litex-hub/wishbone-utils/releases)
 -   [LiteX CSRs: A Developer's Overview](https://github.com/enjoy-digital/litex/wiki/CSR-Bus)
