@@ -61,7 +61,13 @@ _io = [
         Subsignal("sda", Pins("32"), IOStandard("LVCMOS33")),          # PIN_OK
     ),
 
-    ("gpio_test", 0, Pins("31 32"), IOStandard("LVCMOS33"))
+    ("i2s", 0,
+        Subsignal("mclk",  Pins("44"), IOStandard("LVCMOS33")),
+        Subsignal("dout",  Pins("45"), IOStandard("LVCMOS33")),
+        Subsignal("sclk",  Pins("46"), IOStandard("LVCMOS33")),
+        Subsignal("lrclk", Pins("47"), IOStandard("LVCMOS33")),
+        Subsignal("din",   Pins("48"), IOStandard("LVCMOS33")),
+    ),
 ]
 
 # Connectors ------------------------------------------------------------------

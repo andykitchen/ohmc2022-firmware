@@ -44,6 +44,7 @@ from rtl.sbwarmboot import SBWarmBoot
 from rtl.messible import Messible
 from rtl.i2c import RTLI2C
 from rtl.ice40_hard_i2c import HardI2C
+from rtl.codec_clock import CodecClock
 
 
 class Platform(LatticePlatform):
@@ -221,6 +222,8 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
         self.submodules.rgb = SBLED(platform.revision, platform.request("rgb_led"))
+
+        self.submodules.codec_clk = CodecClock(platform.request('i2s'))
 
         #self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
         #        ("0x45", "E", "Fomu EVT"),
