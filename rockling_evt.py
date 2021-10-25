@@ -68,6 +68,9 @@ _io = [
         Subsignal("lrclk", Pins("47"), IOStandard("LVCMOS33")),
         Subsignal("din",   Pins("48"), IOStandard("LVCMOS33")),
     ),
+
+    ("osc", 0, Pins("13"), IOStandard("LVCMOS33")),
+    ("osc", 1, Pins("37"), IOStandard("LVCMOS33")),
 ]
 
 # Connectors ------------------------------------------------------------------
