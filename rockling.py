@@ -242,7 +242,7 @@ class BaseSoC(SoCCore, AutoDoc):
 
             self.submodules.analyzer = \
                 LiteScopeAnalyzer(analyzer_signals,
-                                  depth=512,
+                                  depth=1000,
                                   clock_domain="sys",
                                   csr_csv="analyzer.csv")
 
@@ -298,7 +298,7 @@ def main():
 
     if args.with_cpu:
         cpu_type = "vexriscv"
-        cpu_variant = "minimal+debug"
+        cpu_variant = "minimal"
     else:
         cpu_type = None
         cpu_variant = None
