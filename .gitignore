@@ -1,1 +1,4 @@
-build
+build/
+csr.csv
+analyzer.csv
+dump.vcd

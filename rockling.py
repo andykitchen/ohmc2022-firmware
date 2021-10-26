@@ -306,7 +306,7 @@ def main():
                       cpu_type=None,
                       usb_debug=True, with_analyzer=args.with_analyzer)
 
-    builder = Builder(soc, csr_csv="build/csr.csv", compile_software=False, compile_gateware=True)
+    builder = Builder(soc, csr_csv="csr.csv", compile_software=False, compile_gateware=True)
     soc.do_exit(builder.build())
 
 

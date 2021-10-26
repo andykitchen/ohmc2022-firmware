@@ -3,7 +3,7 @@
 # This script tries to sequentially probe every i2c device on the bus.
 
 csr () {
-	wishbone-tool --csr-csv build/csr.csv "$@" 2>/dev/null | grep -Fv "Exited MemoryAccess thread"
+	wishbone-tool --csr-csv csr.csv "$@" 2>/dev/null | grep -Fv "Exited MemoryAccess thread"
 }
 
 csr i2c_core_reset 1  # reset i2c block

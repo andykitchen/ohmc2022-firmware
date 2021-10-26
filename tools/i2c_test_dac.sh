@@ -8,7 +8,7 @@
 # https://ww1.microchip.com/downloads/en/DeviceDoc/MCP47CXBXX-Data-Sheet-DS20006089B.pdf
 
 csr () {
-	wishbone-tool --csr-csv build/csr.csv "$@" 2>/dev/null | grep -Fv "Exited MemoryAccess thread"
+	wishbone-tool --csr-csv csr.csv "$@" 2>/dev/null | grep -Fv "Exited MemoryAccess thread"
 }
 
 csr i2c_core_reset 1  # reset i2c block

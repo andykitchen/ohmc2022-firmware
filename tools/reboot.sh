@@ -1,7 +1,7 @@
 #!/bin/bash
 
 csr () {
-	wishbone-tool --csr-csv build/csr.csv "$@"
+	wishbone-tool --csr-csv csr.csv "$@"
 }
 
 csr reboot_ctrl 0xac

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 csr () {
-	wishbone-tool --csr-csv build/csr.csv "$@"
+	wishbone-tool --csr-csv csr.csv "$@"
 }
 
 csr rgb_ctrl 0x7
