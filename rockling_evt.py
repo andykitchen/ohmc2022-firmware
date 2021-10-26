@@ -69,8 +69,8 @@ _io = [
         Subsignal("din",   Pins("48"), IOStandard("LVCMOS33")),
     ),
 
-    ("osc", 0, Pins("13"), IOStandard("LVCMOS33")),
-    ("osc", 1, Pins("37"), IOStandard("LVCMOS33")),
+    ("osc", 0, Pins("13"), IOStandard("LVCMOS33")), # VO_PITCH
+    ("osc", 1, Pins("37"), IOStandard("LVCMOS33")), # VO_VOLUME
 ]
 
 # Connectors ------------------------------------------------------------------
