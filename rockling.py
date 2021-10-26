@@ -28,6 +28,8 @@ from litex.soc.interconnect import wishbone
 from litex.soc.cores import spi_flash
 from litex.soc.cores.ram.lattice_ice40 import Up5kSPRAM
 
+from litescope import LiteScopeAnalyzer
+
 from valentyusb.usbcore import io as usbio
 from valentyusb.usbcore.cpu import epmem, unififo, epfifo, dummyusb, eptri
 from valentyusb.usbcore.endpoint import EndpointType
@@ -184,7 +186,7 @@ class _CRG(Module, AutoDoc):
 
 class BaseSoC(SoCCore, AutoDoc):
 
-    def __init__(self, platform, pnr_seed=0xFADE, usb_debug=True, **kwargs):
+    def __init__(self, platform, pnr_seed=0xFADE, usb_debug=True, with_analyzer=True, **kwargs):
         clk_freq = int(12e6)
         self.submodules.crg = _CRG(platform)
 
@@ -226,8 +228,23 @@ class BaseSoC(SoCCore, AutoDoc):
 
         self.submodules.codec_clk = CodecClock(platform.request('i2s'))
 
-        self.submodules.freq_cnt0 = FrequencyCounter(platform.request('osc', 0))
-        self.submodules.freq_cnt1 = FrequencyCounter(platform.request('osc', 1))
+        osc0 = platform.request('osc', 0)
+        osc1 = platform.request('osc', 1)
+
+        self.submodules.freq_cnt0 = FrequencyCounter(osc0)
+        self.submodules.freq_cnt1 = FrequencyCounter(osc1)
+
+        if with_analyzer:
+            analyzer_signals = [
+                self.freq_cnt0.sig,
+                self.freq_cnt1.sig,
+            ]
+
+            self.submodules.analyzer = \
+                LiteScopeAnalyzer(analyzer_signals,
+                                  depth=512,
+                                  clock_domain="sys",
+                                  csr_csv="analyzer.csv")
 
         #self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
         #        ("0x45", "E", "Fomu EVT"),
@@ -276,15 +293,20 @@ def main():
     parser.add_argument("--seed", default=0xFADE, type=int, help="seed to use in nextpnr")
     parser.add_argument("--revision", default="rockling_evt", help="platform revision")
     parser.add_argument("--with-cpu", help="include a CPU", action="store_true")
+    parser.add_argument("--with-analyzer", help="include litescope logic analyzer block", action="store_true")
     args = parser.parse_args()
 
     platform = Platform(revision=args.revision)
     if args.with_cpu:
-	    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type="vexriscv", cpu_variant="minimal+debug", usb_debug=True)
+        soc = BaseSoC(platform, pnr_seed=args.seed,
+                      cpu_type="vexriscv", cpu_variant="minimal+debug",
+                      usb_debug=True, with_analyzer=args.with_analyzer)
     else:
-	    soc = BaseSoC(platform, pnr_seed=args.seed, cpu_type=None, usb_debug=True)
-    builder = Builder(soc, csr_csv="build/csr.csv", compile_software=False, compile_gateware=True)
+        soc = BaseSoC(platform, pnr_seed=args.seed,
+                      cpu_type=None,
+                      usb_debug=True, with_analyzer=args.with_analyzer)
 
+    builder = Builder(soc, csr_csv="build/csr.csv", compile_software=False, compile_gateware=True)
     soc.do_exit(builder.build())
 
 

@@ -22,7 +22,7 @@ class FrequencyCounter(Module, AutoCSR, AutoDoc):
         elapse_next = Signal(len(elapse))
         cycles_next = Signal(len(cycles))
 
-        sig = Signal(len(pads))
+        self.sig = sig = Signal(len(pads))
         sig_prev = Signal(len(sig))
 
         self.specials += MultiReg(pads, sig)
