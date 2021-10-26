@@ -16,3 +16,6 @@
 [submodule "deps/valentyusb"]
 	path = deps/valentyusb
 	url = https://github.com/im-tomu/valentyusb.git
+[submodule "deps/pythondata-software-picolibc"]
+	path = deps/pythondata-software-picolibc
+	url = https://github.com/litex-hub/pythondata-software-picolibc.git

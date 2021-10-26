@@ -9,7 +9,10 @@ class FrequencyCounter(Module, AutoCSR, AutoDoc):
     def __init__(self, pads):
         self.elapse = CSRStatus(32, name="elapse", description="""number of clock ticks elapsed""")
         self.cycles = CSRStatus(16, name="cycles", description="""number of signal cycles counted""")
-        self.reset  = CSRStorage(1, name="reset",  description="""reset this module""")
+
+        self.reset = CSRStorage(1, name="reset", fields = [
+            CSRField("reset", size=1, description="Write `1` for a synchronous reset of the counters", pulse=True)
+        ])
 
         self.intro = ModuleDoc("""
         Simple frequency counter
@@ -17,7 +20,7 @@ class FrequencyCounter(Module, AutoCSR, AutoDoc):
 
         elapse = self.elapse.status
         cycles = self.cycles.status
-        reset  = self.reset.storage
+        reset  = self.reset.fields.reset
 
         elapse_next = Signal(len(elapse))
         cycles_next = Signal(len(cycles))
