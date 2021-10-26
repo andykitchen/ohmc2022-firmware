@@ -296,16 +296,17 @@ def main():
     parser.add_argument("--with-analyzer", help="include litescope logic analyzer block", action="store_true")
     args = parser.parse_args()
 
-    platform = Platform(revision=args.revision)
     if args.with_cpu:
-        soc = BaseSoC(platform, pnr_seed=args.seed,
-                      cpu_type="vexriscv", cpu_variant="minimal+debug",
-                      usb_debug=True, with_analyzer=args.with_analyzer)
+        cpu_type = "vexriscv"
+        cpu_variant = "minimal+debug"
     else:
-        soc = BaseSoC(platform, pnr_seed=args.seed,
-                      cpu_type=None,
-                      usb_debug=True, with_analyzer=args.with_analyzer)
+        cpu_type = None
+        cpu_variant = None
 
+    platform = Platform(revision=args.revision)
+    soc = BaseSoC(platform, pnr_seed=args.seed,
+                  cpu_type=cpu_type, cpu_variant=cpu_variant,
+                  usb_debug=True, with_analyzer=args.with_analyzer)
     builder = Builder(soc, csr_csv="csr.csv", compile_software=False, compile_gateware=True)
     soc.do_exit(builder.build())
 
