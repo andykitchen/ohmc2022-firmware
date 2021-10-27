@@ -54,6 +54,35 @@ $ ./tools/i2c_test_codec.sh
 The 8th bit of the `i2c_status` register is the `RxACK` bit,
 it is 0 if an `ACK`, 1 if `NACK`.
 
+## Embedded Analyser
+
+One can enable an embedded [litescope](https://github.com/enjoy-digital/litescope)
+signal analyzer. First, build the firmware with the analyzer enabled:
+
+```
+$ python rockling.py --with-analyzer
+```
+
+Litescope communicates using the etherbone protocol,
+you will need to use the `wishbone-tool` in the server
+mode to bridge from etherbone<->USB.
+
+```
+$ wishbone-tool --server=wishbone
+```
+
+Once the `wishbone-tool` server is running you
+can use the `litescope_cli` tool to download
+traces from the device:
+
+```
+$ litescope_cli -r freq_cnt0_sig --subsample 1200
+```
+
+Some useful documentation on how to
+[use litescope to debug a SoC](https://github.com/enjoy-digital/litex/wiki/Use-LiteScope-To-Debug-A-SoC)
+and how to [use the host bridge to debug](https://github.com/enjoy-digital/litex/wiki/Use-Host-Bridge-to-control-debug-a-SoC).
+
 ## See Also:
 
 -   [ValentyUSB](https://github.com/im-tomu/valentyusb)
