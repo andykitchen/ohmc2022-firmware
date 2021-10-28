@@ -3,10 +3,10 @@
 #include <stdint.h>
 
 enum led_registers {
-    LEDDCR0 = 8,
-    LEDDBR = 9,
-    LEDDONR = 10,
-    LEDDOFR = 11,
+    LEDDCR0  = 8,
+    LEDDBR   = 9,
+    LEDDONR  = 10,
+    LEDDOFR  = 11,
     LEDDBCRR = 5,
     LEDDBCFR = 6,
     LEDDPWRR = 1,
