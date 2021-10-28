@@ -207,8 +207,6 @@ class BaseSoC(SoCCore, AutoDoc):
         # default depth seems to cause timing problems
         #self.submodules.messible = Messible(depth=16)
 
-        #self.submodules.gpio = GPIOTristate(platform.request("gpio_test"))
-
         i2c_pads0 = platform.request("i2c", 0)
         i2c_pads1 = platform.request("i2c", 1)
         self.submodules.i2c = RTLI2C(platform, i2c_pads1)
