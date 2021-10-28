@@ -21,7 +21,7 @@ from litex.build.generic_platform import Pins, Subsignal
 from litex.soc.integration.doc import AutoDoc, ModuleDoc
 from litex.soc.integration.soc_core import SoCCore
 from litex.soc.cores.cpu import CPUNone
-from litex.soc.cores.gpio import GPIOTristate
+from litex.soc.cores.gpio import GPIOOut
 from litex.soc.integration.builder import Builder
 from litex.soc.interconnect import wishbone
 
@@ -227,6 +227,8 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.rgb = SBLED(platform.revision, platform.request("rgb_led"))
 
         self.submodules.codec_clk = CodecClock(platform.request('i2s'))
+
+        self.submodules.dac_latch = GPIOOut(platform.request('dac_latch'))
 
         osc0 = platform.request('osc', 0)
         osc1 = platform.request('osc', 1)

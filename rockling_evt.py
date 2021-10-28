@@ -51,16 +51,19 @@ _io = [
         Subsignal("dq",   Pins("14 17 18 19"), IOStandard("LVCMOS33")),# GOOD
     ),
 
+    # SAO Bus
     ("i2c", 0,
         Subsignal("scl", Pins("9"),  IOStandard("LVCMOS33")),          # PIN_OK
         Subsignal("sda", Pins("10"), IOStandard("LVCMOS33")),          # PIN_OK
     ),
 
+    # DAC / CODEC Bus
     ("i2c", 1,
         Subsignal("scl", Pins("31"), IOStandard("LVCMOS33")),          # PIN_OK
         Subsignal("sda", Pins("32"), IOStandard("LVCMOS33")),          # PIN_OK
     ),
 
+    # CODEC
     ("i2s", 0,
         Subsignal("mclk",  Pins("44"), IOStandard("LVCMOS33")),
         Subsignal("dout",  Pins("45"), IOStandard("LVCMOS33")),
@@ -69,8 +72,11 @@ _io = [
         Subsignal("din",   Pins("48"), IOStandard("LVCMOS33")),
     ),
 
+    ("dac_latch", 0, Pins("27"), IOStandard("LVCMOS33")),
+
     ("osc", 0, Pins("13"), IOStandard("LVCMOS33")), # VO_PITCH
     ("osc", 1, Pins("37"), IOStandard("LVCMOS33")), # VO_VOLUME
+
 ]
 
 # Connectors ------------------------------------------------------------------
