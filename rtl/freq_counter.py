@@ -30,11 +30,14 @@ class FrequencyCounter(Module, AutoCSR, AutoDoc):
         self.sig = sig = Signal(len(pads))
         sig_prev = Signal(len(sig))
 
+        sig_rising_edge = Signal()
+
         self.specials += MultiReg(pads, sig)
 
         self.comb += [
             elapse_next.eq(elapse + 1),
             cycles_next.eq(cycles + 1),
+            sig_rising_edge.eq(sig & ~sig_prev),
         ]
 
         self.sync += [
@@ -46,6 +49,6 @@ class FrequencyCounter(Module, AutoCSR, AutoDoc):
                     sig_prev.eq(sig),
                     elapse.eq(elapse_next),
                     If(elapse_next == Constant(0, len(elapse)), cycles.eq(0))
-                      .Else(If(sig & ~sig_prev, cycles.eq(cycles_next))),
+                      .Elif(sig_rising_edge, cycles.eq(cycles_next)),
                 ))
         ]
