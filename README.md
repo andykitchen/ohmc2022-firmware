@@ -19,9 +19,13 @@ You will need:
 
 Setup python environment:
 
-```shell
-$ setup-venv.sh             # only needed on first run
-$ source venv/bin/activate  # only needed once per terminal session
+```
+# On first run
+$ git submodule update --init --recursive
+$ setup-venv.sh
+
+# For each terminal session
+$ source venv/bin/activate
 ```
 
 Build gateware:

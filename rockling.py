@@ -297,8 +297,8 @@ def main():
     args = parser.parse_args()
 
     if args.with_cpu:
-        cpu_type = "vexriscv"
-        cpu_variant = "minimal"
+        cpu_type = "femtorv"
+        cpu_variant = "standard"
     else:
         cpu_type = None
         cpu_variant = None

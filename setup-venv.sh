@@ -9,7 +9,7 @@ fi
 
 source $VENV/bin/activate || exit 1
 
-#pip install -r requirements.txt
+pip install -r requirements.txt
 
 find deps -maxdepth 2 -name "setup.py" | while read line; do
 	(

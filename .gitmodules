@@ -4,18 +4,30 @@
 [submodule "deps/litex"]
 	path = deps/litex
 	url = https://github.com/enjoy-digital/litex.git
-[submodule "deps/litedram"]
-	path = deps/litedram
-	url = https://github.com/enjoy-digital/litedram.git
+[submodule "deps/valentyusb"]
+	path = deps/valentyusb
+	url = https://github.com/im-tomu/valentyusb.git
 [submodule "deps/litex_boards"]
 	path = deps/litex_boards
 	url = https://github.com/litex-hub/litex-boards.git
 [submodule "deps/litescope"]
 	path = deps/litescope
 	url = https://github.com/enjoy-digital/litescope.git
-[submodule "deps/valentyusb"]
-	path = deps/valentyusb
-	url = https://github.com/im-tomu/valentyusb.git
+[submodule "deps/litedram"]
+	path = deps/litedram
+	url = https://github.com/enjoy-digital/litedram.git
+[submodule "deps/liteeth"]
+	path = deps/liteeth
+	url = https://github.com/enjoy-digital/liteeth
+[submodule "deps/liteiclink"]
+	path = deps/liteiclink
+	url = https://github.com/enjoy-digital/liteiclink
 [submodule "deps/pythondata-software-picolibc"]
 	path = deps/pythondata-software-picolibc
 	url = https://github.com/litex-hub/pythondata-software-picolibc.git
+[submodule "deps/pythondata-software-compiler_rt"]
+	path = deps/pythondata-software-compiler_rt
+	url = https://github.com/litex-hub/pythondata-software-compiler_rt
+[submodule "deps/pythondata-misc-tapcfg"]
+	path = deps/pythondata-misc-tapcfg
+	url = https://github.com/litex-hub/pythondata-misc-tapcfg.git
