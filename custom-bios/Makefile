@@ -1,9 +1,14 @@
 include ../include/generated/variables.mak
 include $(SOC_DIRECTORY)/software/common.mak
 
-OBJECTS = isr.o			\
-	  loop.o                \
-	  main.o
+CFLAGS += -Wno-parentheses -O2
+
+OBJECTS = \
+	isr.o             \
+	rgb.o             \
+	i2c.o             \
+	loop.o            \
+	main.o
 
 all: bios.bin
 	$(PYTHON) -m litex.soc.software.memusage bios.elf $(CURDIR)/../include/generated/regions.ld $(TRIPLE)
@@ -28,6 +33,8 @@ vpath %.a $(PACKAGES:%=../%)
 
 # pull in dependency info for *existing* .o files
 -include $(OBJECTS:.o=.d)
+
+# main.o: CFLAGS += -O2
 
 %.o: $(BIOS_DIRECTORY)/%.c
 	$(compile)
