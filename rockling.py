@@ -11,7 +11,7 @@ import lxbuildenv
 # Disable pylint's E1101, which breaks completely on migen
 #pylint:disable=E1101
 
-from migen import Module, Signal, Instance, ClockDomain, If
+from migen import Module, Signal, Instance, ClockDomain, If, ResetSignal
 from migen.fhdl.specials import TSTriple
 from migen.fhdl.decorators import ClockDomainsRenamer
 from migen.genlib.cdc import AsyncResetSynchronizer
@@ -19,7 +19,7 @@ from migen.genlib.cdc import AsyncResetSynchronizer
 from litex.build.lattice.platform import LatticePlatform
 from litex.build.generic_platform import Pins, Subsignal
 from litex.soc.integration.doc import AutoDoc, ModuleDoc
-from litex.soc.integration.soc_core import SoCCore
+from litex.soc.integration.soc_core import SoCCore, get_mem_data
 from litex.soc.cores.cpu import CPUNone
 from litex.soc.cores.gpio import GPIOOut
 from litex.soc.integration.builder import Builder
@@ -38,6 +38,7 @@ import litex.soc.doc as lxsocdoc
 
 import argparse
 import os
+from pathlib import Path
 
 from rtl.version import Version
 from rtl.romgen import FirmwareROM
@@ -190,7 +191,11 @@ class BaseSoC(SoCCore, AutoDoc):
         clk_freq = int(12e6)
         self.submodules.crg = _CRG(platform)
 
-        SoCCore.__init__(self, platform, clk_freq, integrated_sram_size=0, with_uart=False, csr_data_width=32, **kwargs)
+        SoCCore.__init__(self, platform, clk_freq,
+                         integrated_sram_size=0,
+                         with_uart=False,
+                         csr_data_width=32,
+                         **kwargs)
 
         usb_pads = platform.request("usb")
         usb_iobuf = usbio.IoBuf(usb_pads.d_p, usb_pads.d_n, usb_pads.pullup)
@@ -205,20 +210,12 @@ class BaseSoC(SoCCore, AutoDoc):
         self.register_mem("sram", self.mem_map["sram"], self.spram.bus, spram_size)
 
         # default depth seems to cause timing problems
-        #self.submodules.messible = Messible(depth=16)
+        self.submodules.messible = Messible(depth=16)
 
         i2c_pads0 = platform.request("i2c", 0)
         i2c_pads1 = platform.request("i2c", 1)
-        self.submodules.i2c = RTLI2C(platform, i2c_pads1)
-        #self.submodules.i2c = HardI2C(platform, i2c_pads0)
-
-        if hasattr(self, "cpu") and not isinstance(self.cpu, CPUNone):
-            bios_size = 0x2000
-            bios_file = 'bios.bin'
-            self.integrated_rom_size = bios_size
-            #self.submodules.firmware_rom = FirmwareROM(bios_size, bios_file)
-            self.submodules.firmware_rom = wishbone.SRAM(bios_size, read_only=True, init=[0xDEADBEEF]*(bios_size//4))
-            self.register_rom(self.firmware_rom.bus, bios_size)
+        self.submodules.i2c0 = RTLI2C(platform, i2c_pads1)
+        #self.submodules.i2c0 = HardI2C(platform, i2c_pads0)
 
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
@@ -288,27 +285,56 @@ class BaseSoC(SoCCore, AutoDoc):
         #platform.toolchain.build_template[1] += " --placer {}".format(placer)
 
 
+class MinimalBuilder(Builder):
+    def __init__(self, soc, **kwargs):
+        super().__init__(soc, **kwargs)
+        self.software_packages = []
+        self.software_libraries = []
+
+    def add_software_package(self, name, src_dir=None):
+        if name == 'bios':
+            custom_bios_path = str(Path(__file__).parent.resolve() / 'custom-bios')
+            super().add_software_package(name, src_dir=custom_bios_path)
+        else:
+            super().add_software_package(name, src_dir=src_dir)
+
+
 def main():
     parser = argparse.ArgumentParser("Build Rockling Gateware")
     parser.add_argument("--seed", default=0xFADE, type=int, help="seed to use in nextpnr")
     parser.add_argument("--revision", default="rockling_evt", help="platform revision")
-    parser.add_argument("--with-cpu", help="include a CPU", action="store_true")
+    parser.add_argument("--no-cpu", help="build without a CPU", action="store_true")
+    parser.add_argument("--rom", type=str, help="path to rom binary")
     parser.add_argument("--with-analyzer", help="include litescope logic analyzer block", action="store_true")
     args = parser.parse_args()
 
-    if args.with_cpu:
-        cpu_type = "femtorv"
-        cpu_variant = "standard"
-    else:
+    if args.no_cpu:
         cpu_type = None
         cpu_variant = None
+    else:
+        cpu_type = "femtorv"
+        cpu_variant = "standard"
+
+    if args.rom:
+        rom_init = get_mem_data(args.rom, endianness='little')
+        rom_size = 0x2000
+    else:
+        rom_init = []
+        rom_size = 0x2000
 
     platform = Platform(revision=args.revision)
     soc = BaseSoC(platform, pnr_seed=args.seed,
                   cpu_type=cpu_type, cpu_variant=cpu_variant,
-                  usb_debug=True, with_analyzer=args.with_analyzer)
-    builder = Builder(soc, csr_csv="csr.csv", compile_software=False, compile_gateware=True)
-    soc.do_exit(builder.build())
+                  usb_debug=True, with_analyzer=args.with_analyzer,
+                  integrated_rom_size=rom_size,
+                  integrated_rom_init=rom_init,
+                  with_timer=True)
+
+    builder = MinimalBuilder(soc, csr_csv="csr.csv", compile_software=True, compile_gateware=True)
+    builder.add_software_package('libc')
+    builder.add_software_package('libcompiler_rt')
+    builder.add_software_package('libbase')
+    vns = builder.build()
 
 
 if __name__ == "__main__":
