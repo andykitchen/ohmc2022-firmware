@@ -3,7 +3,7 @@ BIOS_DIR=build/rockling/software/bios
 all: bitstream
 
 bitstream: venv
-	python rockling.py
+	venv/bin/python rockling.py
 
 venv:
 	git submodule update --init --recursive
