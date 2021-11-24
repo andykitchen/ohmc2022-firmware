@@ -2,8 +2,12 @@ BIOS_DIR=build/rockling/software/bios
 
 all: bitstream
 
-bitstream:
+bitstream: venv
 	python rockling.py
+
+venv:
+	git submodule update --init --recursive
+	./setup-venv.sh
 
 # NOTE: building the bitstream also builds the bios
 bios:
