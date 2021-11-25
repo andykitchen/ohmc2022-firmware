@@ -242,6 +242,27 @@ This is very ghetto debugging, but it gets the job done. Ideally one could autom
 to various degrees.
 
 
+### VSCode Setup
+
+The VSCode IDE works quite well on this project when configured correctly.
+Both the Python and C/C++ features work at the same time, which is handy
+when switching between editing the LiteX Python SoC description and the C software.
+You can use `tools/dot-vscode-example` as a starting point for your own configuration.
+
+For automagic vscode setup use the following commands:
+
+```shell
+$ cp tools/dot-vscode-example .vscode
+$ jq ".configurations[].compilerPath=\"$(which riscv64-unknown-elf-gcc)\"" tools/dot-vscode-example/c_cpp_properties.json > .vscode/c_cpp_properties.json
+# can you also just edit the file manually with your riscv64-unknown-elf-gcc path
+```
+
+You can install the following extensions:
+-   Python
+-   C/C++
+-   RISC-V Support (for RISCV assembly code syntax colouring)
+
+
 ## See Also:
 
 -   [LiteX CSRs: A Developer's Overview](https://github.com/enjoy-digital/litex/wiki/CSR-Bus)

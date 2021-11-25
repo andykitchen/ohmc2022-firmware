@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/build/rockling/software/**",
+                "${workspaceFolder}/build/rockling/software/include",
+                "${workspaceFolder}/deps/litex/litex/soc/software/include",
+                "${workspaceFolder}/deps/litex/litex/soc/cores/cpu/femtorv"
+            ],
+            "defines": [],
+            "compilerPath": "${env:HOME}/fomu/fomu-toolchain-Linux/bin/riscv64-unknown-elf-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "${default}"
+        }
+    ],
+    "version": 4
+}
