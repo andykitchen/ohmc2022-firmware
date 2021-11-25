@@ -142,7 +142,7 @@ $ python rockling.py --seed <N>
 ```
 
 
-### Custom BIOS
+## Custom BIOS
 
 Generally when LiteX is used on larger boards a small BIOS is stored directly
 into a ROM embedded in the bitstream. This BIOS is used to then load an operating system
@@ -172,8 +172,35 @@ Or directly dissassemble the raw binary image of the BIOS with:
 $ riscv64-unknown-elf-objdump -b binary -m riscv:rv32 -D build/rockling/software/bios/bios.bin
 ```
 
+### Boot sequence
+
 It's interesting to see because the code is basically just a lot of
 of loads and stores to control registers, with a few branches.
+
+The early boot procedure is pretty straight forward.
+The CPU reset vector is just `0x00000000` this is the bottom of ROM,
+corresponding to the first instruction in `bios.bin`.
+
+Then, there is an immediate jump into the `reset_vector` which:
+
+1.   Sets up the stack pointer
+2.   Sets up `trap_vector` using `csrw mtvec,t0` this is the location the CPU will jump on interrupts:
+    -   illegal instructions
+    -   bus errors?
+    -   external interrupts? _(not implemented in FemtoRV the CPU core we're currently using)_
+3.   Copies initial values for static variables (`.data`) from their location in ROM into SRAM starting at `0x010000000`
+4.   Zeros SRAM locations for zero initialised variables (`.bss`)
+5.   Enables some interrupts using `csrs mie,t0`
+6.   Jumps to `main`
+7.   Goes into an infinite loop (if `main` ever returns)
+
+The `trap_vector`:
+
+1. Tries to save all the registers on the stack
+2. Jumps to the `isr`
+3. Reloads the saved registers
+4. Tries to return from the handler via the `mret` instruction
+
 
 ### Debugging the Software
 
