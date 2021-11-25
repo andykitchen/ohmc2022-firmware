@@ -36,12 +36,6 @@ class SBWarmBoot(Module, AutoCSR):
                 to reboot to, just be sure to OR the image number with ``0xac``.  For example,
                 to reboot to the bootloader (image 0), write ``0xac``` to this register."""
         )
-        self.addr = CSRStorage(size=32, description="""
-                This sets the reset vector for the VexRiscv.  This address will be used whenever
-                the CPU is reset, for example through a debug bridge.  You should update this
-                address whenever you load a new program, to enable the debugger to run ``mon reset``
-                """
-            )
         do_reset = Signal()
         self.comb += [
             # "Reset Key" is 0xac (0b101011xx)
