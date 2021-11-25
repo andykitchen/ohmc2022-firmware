@@ -286,6 +286,11 @@ class BaseSoC(SoCCore, AutoDoc):
 
 
 class MinimalBuilder(Builder):
+    """
+    FIXME HACK there seems to be no standard documented way of providing a custom BIOS inside LiteX
+    so I've just created this hacky little subclass that overrides some internal functionality
+    to force the bios source path to be our custom version.
+    """
     def __init__(self, soc, **kwargs):
         super().__init__(soc, **kwargs)
         self.software_packages = []
