@@ -1,7 +1,8 @@
 Rockling Firmware
 =================
 
-### Prerequisites
+Prerequisites
+-------------
 
 You will need:
 
@@ -11,11 +12,13 @@ You will need:
     -   [Binary releases from riscv-collab on GitHub](https://github.com/riscv-collab/riscv-gnu-toolchain/releases)
 -   [LiteX SoC Builder](https://github.com/enjoy-digital/litex)
     -   install inside a python virtual env using the included `setup-venv.sh` script
-    -   _optional:_ [Install using globally using `litex_setup.py`](https://github.com/enjoy-digital/litex#quick-start-guide)
+    -   _optional:_ [Install globally using `litex_setup.py`](https://github.com/enjoy-digital/litex#quick-start-guide)
 -   _For debugging and testing:_ [wishbone-utils](https://github.com/litex-hub/wishbone-utils)
     -   [wishbone-tool precompiled binaries](https://github.com/litex-hub/wishbone-utils/releases)
 
-## Build
+
+Building and Running
+--------------------
 
 I've tried to automate the build process as best I can.
 After installing the prerequsites just run:
@@ -25,7 +28,7 @@ $ make all
 ```
 
 Everything _should_ automagically work, if there are
-any problems you can try the step by step manual
+any problems you can try the step-by-step manual
 build process further down to try and narrow down the problem.
 
 
@@ -71,7 +74,7 @@ $ wishbone-tool 0x01000000
 You can find all the CSR memory addresses in `csr.csv`.
 
 
-## I2C Test Scripts
+### I2C Test Scripts
 
 There are i2c test scripts in the `tools` directory, they should be run
 from the top-level e.g.
@@ -86,7 +89,7 @@ The 8th bit of the `i2c_status` register is the `RxACK` bit,
 it is 0 if an `ACK`, 1 if `NACK`.
 
 
-## Embedded Analyzer
+### Embedded Analyzer
 
 One can enable an embedded [litescope](https://github.com/enjoy-digital/litescope)
 signal analyzer. First, build the firmware with the analyzer enabled:
@@ -116,7 +119,7 @@ Some useful documentation on how to
 and how to [use the host bridge to debug](https://github.com/enjoy-digital/litex/wiki/Use-Host-Bridge-to-control-debug-a-SoC).
 
 
-## Manual build
+### Manual build
 
 Setup python environment:
 
@@ -142,7 +145,8 @@ $ python rockling.py --seed <N>
 ```
 
 
-## Custom BIOS
+Custom BIOS
+-----------
 
 Generally when LiteX is used on larger boards a small BIOS is stored directly
 into a ROM embedded in the bitstream. This BIOS is used to then load an operating system
@@ -160,7 +164,7 @@ firmware requires rebuilding the entire bitstream. Currently this process
 is reasonably quick and reliable, but if that changes we'll have to find a
 way to speed up development.
 
-You can disassembed the ELF version of the bios with:
+You can disassemble the ELF version of the bios with:
 
 ```
 $ riscv64-unknown-elf-objdump -d build/rockling/software/bios/bios.elf
@@ -172,39 +176,39 @@ Or directly dissassemble the raw binary image of the BIOS with:
 $ riscv64-unknown-elf-objdump -b binary -m riscv:rv32 -D build/rockling/software/bios/bios.bin
 ```
 
-### Boot sequence
-
 It's interesting to see because the code is basically just a lot of
 of loads and stores to control registers, with a few branches.
+
+
+### Boot sequence
 
 The early boot procedure is pretty straight forward.
 The CPU reset vector is just `0x00000000` this is the bottom of ROM,
 corresponding to the first instruction in `bios.bin`.
 
-Then, there is an immediate jump into the `reset_vector` which:
+Then, there is an immediate jump into the `reset_vector` body which:
 
-1.   Sets up the stack pointer
-2.   Sets up `trap_vector` using `csrw mtvec,t0` this is the location the CPU will jump on interrupts:
-    -   illegal instructions
-    -   bus errors?
-    -   external interrupts? _(not implemented in FemtoRV the CPU core we're currently using)_
-3.   Copies initial values for static variables (`.data`) from their location in ROM into SRAM starting at `0x010000000`
-4.   Zeros SRAM locations for zero initialised variables (`.bss`)
-5.   Enables some interrupts using `csrs mie,t0`
-6.   Jumps to `main`
-7.   Goes into an infinite loop (if `main` ever returns)
+1. Sets up the stack pointer
+2. Sets up `trap_vector` using `csrw mtvec,t0` this is the location the CPU will jump on interrupts:
+    * illegal instructions
+    * bus errors?
+    * external interrupts? _(not implemented in FemtoRV the CPU core we're currently using)_
+3. Copies initial values for static variables (`.data`) from their location in ROM into SRAM starting at `0x010000000`
+4. Zeros SRAM locations for zero initialised variables (`.bss`)
+5. Enables some interrupts using `csrs mie,t0`
+6. Jumps to `main()`
+7. Goes into an infinite loop if `main()` ever returns
 
 The `trap_vector`:
 
 1. Tries to save all the registers on the stack
-2. Jumps to the `isr`
+2. Jumps to the `isr()`
 3. Reloads the saved registers
 4. Tries to return from the handler via the `mret` instruction
 
+### Software Debugging
 
-### Debugging the Software
-
-Because the custom bios runs on the bare metal on a very minimalistic RISCV core,
+Because the code runs on the bare metal on a very minimalistic RISCV core,
 there is no easy way to attach a debugger or even `printf()` messages for
 that matter.
 
@@ -217,22 +221,25 @@ Here are tricks that I've been using:
 #### Messible
 
 The Messible system is a minimal FIFO controlled with CSR registers
-for device-to-host communication, `wishbone-tool` has some support for it:
+for device-to-host communication, `wishbone-tool` has some support for it.
+On the device:
 
 ```c
 /* write to messible in C */
 messible_puts("DOH!");
 ```
 
+On the host:
+
 ```shell
 # read messible messages on the host
-wishbone-tool --server=messible --messible-address=0x82002800
+$ wishbone-tool --server=messible --messible-address=0x82002800
 ```
 
 Where the messible address can be looked up in `csr.csv`,
 look for the `csr_base` address of `messible`:
 
-```csv
+```
 csr_base,messible,0x82002800,,
 ```
 
@@ -241,10 +248,11 @@ csr_base,messible,0x82002800,,
 Because there is debug bus access you can peek / poke to a known location
 in SRAM and read that out on the host:
 
-Create an arbitrary global variable:
+Create an arbitrary global variable and mark it volatile, so the
+compiler knows that it should not optimise away writes to that location:
 
 ```c
-const unsigned int debug_status;
+volatile unsigned int debug_status;
 
 /* store some state or flag in a global variable to read out of SRAM */
 die() {
@@ -265,11 +273,12 @@ Read the value of that global variable by directly reading that memory address:
 $ wishbone-tool 0x01000000
 ```
 
-This is very ghetto debugging, but it gets the job done. Ideally one could automate this
+This is very ghetto debugging but it gets the job done. Ideally one could automate this
 to various degrees.
 
 
-### VSCode Setup
+VSCode Setup
+------------
 
 The VSCode IDE works quite well on this project when configured correctly.
 Both the Python and C/C++ features work at the same time, which is handy
@@ -279,9 +288,9 @@ You can use `tools/dot-vscode-example` as a starting point for your own configur
 For automagic vscode setup use the following commands:
 
 ```shell
-$ cp tools/dot-vscode-example .vscode
+$ cp -r tools/dot-vscode-example .vscode
 $ jq ".configurations[].compilerPath=\"$(which riscv64-unknown-elf-gcc)\"" tools/dot-vscode-example/c_cpp_properties.json > .vscode/c_cpp_properties.json
-# can you also just edit the file manually with your riscv64-unknown-elf-gcc path
+# You can also just edit the file manually with your riscv64-unknown-elf-gcc path
 ```
 
 You can install the following extensions:
@@ -290,7 +299,8 @@ You can install the following extensions:
 -   RISC-V Support (for RISCV assembly code syntax colouring)
 
 
-## See Also:
+See Also
+--------
 
 -   [LiteX CSRs: A Developer's Overview](https://github.com/enjoy-digital/litex/wiki/CSR-Bus)
 -   [ValentyUSB](https://github.com/im-tomu/valentyusb)
