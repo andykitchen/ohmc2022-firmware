@@ -5,6 +5,9 @@ all: bitstream
 bitstream: venv
 	venv/bin/python rockling.py
 
+bitstream-load: bitstream
+	dfu-util -D build/rockling/gateware/rockling.bin
+
 venv:
 	git submodule update --init --recursive
 	./setup-venv.sh
@@ -19,4 +22,4 @@ bios-clean:
 clean:
 	rm -rf build
 
-.PHONY: all bitstream bios clean
+.PHONY: all bitstream bitstream-load bios bios-clean clean
