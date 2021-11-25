@@ -2,6 +2,7 @@
 
 #include "rgb.h"
 
+#include "util.h"
 
 enum led_registers {
 	LEDDCR0  = 8,
@@ -41,7 +42,7 @@ static void rgb_write(uint8_t value, uint8_t addr) {
 	rgb_dat_write(value);
 }
 
-void rgb_init(void) {
+void NOINLINE rgb_init(void) {
 	// Turn on the RGB block and current enable, as well as enabling led control
 	rgb_ctrl_write((1 << 0) | (1 << 1) | (1 << 2));
 

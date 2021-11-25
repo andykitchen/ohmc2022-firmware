@@ -9,14 +9,13 @@
 #define ACK   0x0
 #define NACK  0x1
 
-#define ENACK -1
-
 static void nop_delay(void);
-static void i2c_wait_tip(int *status);
+static int  i2c_wait_tip(void);
 static void i2c_tx_char(int *status, int tx, int sta);
 static int  i2c_rx_char(int *status, int nack, int stop);
 
 
+/* initialize i2c */
 void NOINLINE i2c_init(void) {
 	int flags;
 
@@ -35,43 +34,68 @@ void NOINLINE i2c_init(void) {
 	i2c0_control_write(flags);
 }
 
-/* TODO handle loss of arbitration */
-int NOINLINE i2c_read_txn(int addr, int tx0, int tx1, int *status) {
+
+#define STATUS_ACK_ARB_MASK ((1<<CSR_I2C0_STATUS_RXACK_OFFSET) | (1<<CSR_I2C0_STATUS_ARBLOST_OFFSET))
+#define STATUS_ARBLOST_MASK (1<<CSR_I2C0_STATUS_ARBLOST_OFFSET)
+
+#define CHECK_ACK(status)  if (status & STATUS_ACK_ARB_MASK) { goto error; }
+#define CHECK_ARB(status)  if (status & STATUS_ARBLOST_MASK) { goto error; }
+
+/* do i2c read transaction
+ * @addr i2c device address
+ * @tx0  first byte of read address
+ * @tx1  second byte of read address
+ * @err_status raw status register when error occured
+ *
+ * @return 16-bits of value read or error code less than zero:
+ * -   ENACK got NACK when expecting ACK
+ * -   EARB  lost bus arbitration
+ * -   EUNK  other unknown error
+ */
+int i2c_read_txn(int addr, int tx0, int tx1, int *err_status) {
+	int status;
 	int rx0, rx1;
 
 	/* send address in write mode with START */
-	i2c_tx_char(status, addr<<1, START);
+	i2c_tx_char(&status, addr<<1, START);
+	CHECK_ACK(status);
 
-	/* if we got a NACK return an error */
-	if (i2c0_status_rxack_extract(*status))
-		return ENACK;
+	/* send first data byte */
+	i2c_tx_char(&status, tx0, 0);
+	CHECK_ACK(status);
 
-	i2c_tx_char(status, tx0, 0); /* send first data byte */
-
-	if (i2c0_status_rxack_extract(*status))
-		return ENACK;
-
-	if (!(tx1 < 0)) { /* optionally second data byte if non-negative */
-		i2c_tx_char(status, tx1, 0);
-
-		if (i2c0_status_rxack_extract(*status))
-			return ENACK;
+	/* optionally second data byte if non-negative */
+	if (tx1 >= 0) {
+		i2c_tx_char(&status, tx1, 0);
+		CHECK_ACK(status);
 	}
 
 	/* send address in read mode and RESTART */
-	i2c_tx_char(status, (addr<<1) + 1, START);
-
-	if (i2c0_status_rxack_extract(*status))
-		return ENACK;
+	i2c_tx_char(&status, (addr<<1) + 1, START);
+	CHECK_ACK(status);
 
 	/* receive with ACK */
-	rx0 = i2c_rx_char(status, ACK, 0);
+	rx0 = i2c_rx_char(&status, ACK, 0);
+	CHECK_ARB(status);
 
 	/* receive with NACK and STOP */
-	rx1 = i2c_rx_char(status, NACK, STOP);
+	rx1 = i2c_rx_char(&status, NACK, STOP);
+	CHECK_ARB(status);
 
 	/* the i2c devices we are dealing with send 16-bit values data big-endian */
 	return (rx0<<8) + rx1;
+
+error:
+	/* after a transfer error store the last status and return an error code */
+	if (err_status)
+		*err_status = status;
+
+	if (i2c0_status_rxack_extract(status))
+		return ENACK;
+	else if (i2c0_status_arblost_extract(status))
+		return EARB;
+	else
+		return EUNK;
 }
 
 static void nop_delay(void) {
@@ -79,18 +103,24 @@ static void nop_delay(void) {
 		asm volatile ( "nop" );
 }
 
-static void i2c_wait_tip(int *status) {
-	int s;
+/* wait for a pending i2c transfer to complete */
+static int i2c_wait_tip(void) {
+	int status;
 
 	do {
 		nop_delay();
-		s = i2c0_status_read();
+		status = i2c0_status_read();
 	}
-	while (i2c0_status_tip_extract(s));
+	while (i2c0_status_tip_extract(status));
 
-	*status = s;
+	return status;
 }
 
+/* transmit a single byte
+ * @status status out
+ * @tx     byte to transfer
+ * @sta    generate START / RESTART condition
+ */
 static void i2c_tx_char(int *status, int tx, int sta) {
 	int cmd;
 
@@ -103,10 +133,15 @@ static void i2c_tx_char(int *status, int tx, int sta) {
 	cmd = i2c0_command_sta_replace(cmd, sta); /* generate START condition? */
 	i2c0_command_write(cmd);                  /* send address byte */
 
-	/* wait until transfer in progress is complete */
-	i2c_wait_tip(status);
+	/* wait until transfer is complete */
+	*status = i2c_wait_tip();
 }
 
+/* receive a single byte
+ * @status status out
+ * @nack   generate NACK (otherwise generate ACK)
+ * @stop   generate STOP condition
+ */
 static int i2c_rx_char(int *status, int nack, int stop) {
 	int cmd;
 
@@ -116,9 +151,9 @@ static int i2c_rx_char(int *status, int nack, int stop) {
 	cmd = i2c0_command_sto_replace(cmd, stop); /* generate STOP condition? */
 	i2c0_command_write(cmd);                   /* send address byte */
 
-	/* wait until transfer in progress is complete */
-	i2c_wait_tip(status);
+	/* wait until transfer is complete */
+	*status = i2c_wait_tip();
 
-	/* return value in read register */
+	/* return value in rxr register */
 	return i2c0_rxr_read();
 }

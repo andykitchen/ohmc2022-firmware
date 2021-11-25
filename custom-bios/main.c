@@ -69,7 +69,7 @@ static void post(void) {
 		all_good();
 }
 
-static void all_good(void) {
+static void NOINLINE all_good(void) {
 	int r, g, b;
 
 	r = 0x00;
@@ -78,7 +78,7 @@ static void all_good(void) {
 	rgb_set(r, g, b);
 }
 
-static void nah_mate(void) {
+static void NOINLINE nah_mate(void) {
 	int r, g, b;
 
 	r = 0xff;
