@@ -1,7 +1,7 @@
 include ../include/generated/variables.mak
 include $(SOC_DIRECTORY)/software/common.mak
 
-CFLAGS += -Wno-parentheses -O2
+CFLAGS += -Wno-parentheses
 
 OBJECTS = \
 	isr.o             \

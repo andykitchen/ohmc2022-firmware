@@ -18,9 +18,20 @@ void isr(void)
 
 #else
 
+/* This is really only triggered on a trap,
+   probably an illegal instruction or bus error? */
 void isr(void)
 {
-	/* empty */
+	/* give some visual feedback by trying to set the LEDs to RED */
+	rgb_addr_write(0x01);
+	rgb_dat_write(0xff);
+	rgb_addr_write(0x02);
+	rgb_dat_write(0x00);
+	rgb_addr_write(0x03);
+	rgb_dat_write(0x00);
+
+	/* loop forever */
+	while (1) { }
 }
 
 #endif

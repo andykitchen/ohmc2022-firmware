@@ -12,9 +12,9 @@
 #define ENACK -1
 
 static void nop_delay(void);
-static int i2c_wait_tip(void);
-static int i2c_tx1(int tx, int sta);
-static int i2c_rx1(int *rx, int nack, int stop);
+static void i2c_wait_tip(int *status);
+static void i2c_tx_char(int *status, int tx, int sta);
+static int  i2c_rx_char(int *status, int nack, int stop);
 
 
 void NOINLINE i2c_init(void) {
@@ -36,38 +36,42 @@ void NOINLINE i2c_init(void) {
 }
 
 /* TODO handle loss of arbitration */
-int NOINLINE i2c_read_char(int addr, int tx, int *rx) {
-	int status;
-	int d0, d1;
+int NOINLINE i2c_read_txn(int addr, int tx0, int tx1, int *status) {
+	int rx0, rx1;
 
-	addr &= 0x7f; /* mask off only 7 low bits of address */
-
-	/* send address with START */
-	status = i2c_tx1(addr<<1, START);
+	/* send address in write mode with START */
+	i2c_tx_char(status, addr<<1, START);
 
 	/* if we got a NACK return an error */
-	if (i2c0_status_rxack_extract(status))
+	if (i2c0_status_rxack_extract(*status))
 		return ENACK;
 
-	status = i2c_tx1(tx & 0xff, 0); /* send first data byte */
+	i2c_tx_char(status, tx0, 0); /* send first data byte */
 
-	if (i2c0_status_rxack_extract(status))
+	if (i2c0_status_rxack_extract(*status))
 		return ENACK;
 
-	/* send address with read mode bit and RESTART */
-	status = i2c_tx1((addr<<1) + 1, START);
+	if (!(tx1 < 0)) { /* optionally second data byte if non-negative */
+		i2c_tx_char(status, tx1, 0);
 
-	if (i2c0_status_rxack_extract(status))
+		if (i2c0_status_rxack_extract(*status))
+			return ENACK;
+	}
+
+	/* send address in read mode and RESTART */
+	i2c_tx_char(status, (addr<<1) + 1, START);
+
+	if (i2c0_status_rxack_extract(*status))
 		return ENACK;
 
 	/* receive with ACK */
-	status = i2c_rx1(&d0, ACK, 0);
+	rx0 = i2c_rx_char(status, ACK, 0);
 
 	/* receive with NACK and STOP */
-	status = i2c_rx1(&d1, NACK, STOP);
+	rx1 = i2c_rx_char(status, NACK, STOP);
 
-	*rx = (d1<<8) + d0;
-	return 0;
+	/* the i2c devices we are dealing with send 16-bit values data big-endian */
+	return (rx0<<8) + rx1;
 }
 
 static void nop_delay(void) {
@@ -75,38 +79,36 @@ static void nop_delay(void) {
 		asm volatile ( "nop" );
 }
 
-static int i2c_wait_tip(void) {
-	int status;
+static void i2c_wait_tip(int *status) {
+	int s;
 
 	do {
 		nop_delay();
-		status = i2c0_status_read();
+		s = i2c0_status_read();
 	}
-	while (i2c0_status_tip_extract(status));
+	while (i2c0_status_tip_extract(s));
 
-	return status;
+	*status = s;
 }
 
-static int NOINLINE i2c_tx1(int tx, int sta) {
+static void i2c_tx_char(int *status, int tx, int sta) {
 	int cmd;
-	int status;
 
-	i2c0_txr_write(tx & 0xff);                /* setup tx data register */
+	tx &= 0xff;  /* mask out only 8 low bits of tx data */
+
+	i2c0_txr_write(tx);  /* setup tx data register */
 
 	cmd = 0;
 	cmd = i2c0_command_wr_replace(cmd, 1);    /* write command bit */
 	cmd = i2c0_command_sta_replace(cmd, sta); /* generate START condition? */
 	i2c0_command_write(cmd);                  /* send address byte */
 
-	/* wait until transfer in progress is clear */
-	status = i2c_wait_tip();
-
-	return status;
+	/* wait until transfer in progress is complete */
+	i2c_wait_tip(status);
 }
 
-static int NOINLINE i2c_rx1(int *rx, int nack, int stop) {
+static int i2c_rx_char(int *status, int nack, int stop) {
 	int cmd;
-	int status;
 
 	cmd = 0;
 	cmd = i2c0_command_rd_replace(cmd, 1);     /* read command bit */
@@ -114,9 +116,9 @@ static int NOINLINE i2c_rx1(int *rx, int nack, int stop) {
 	cmd = i2c0_command_sto_replace(cmd, stop); /* generate STOP condition? */
 	i2c0_command_write(cmd);                   /* send address byte */
 
-	status = i2c_wait_tip();
+	/* wait until transfer in progress is complete */
+	i2c_wait_tip(status);
 
-	*rx = i2c0_rxr_read();
-
-	return status;
+	/* return value in read register */
+	return i2c0_rxr_read();
 }

@@ -60,12 +60,9 @@ void rgb_init(void) {
 }
 
 void rgb_set(uint8_t r, uint8_t g, uint8_t b) {
-	// Note: the LEDD control registers have arbitrary names that
-	// do not match up with the LEDD pin outputs.  Hence this strange
-	// mapping.
-	rgb_write(r, LEDDPWRR); // Blue
-	rgb_write(g, LEDDPWRG); // Red
-	rgb_write(b, LEDDPWRB); // Green
+	rgb_write(r, LEDDPWRR);
+	rgb_write(g, LEDDPWRG);
+	rgb_write(b, LEDDPWRB);
 }
 
 // The amount of time to stay off or on
