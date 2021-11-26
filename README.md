@@ -6,14 +6,15 @@ Prerequisites
 
 You will need:
 
+-   [Python 3.6+](https://www.python.org/)
 -   [Icestorm iCE40 synthesis toolchain](http://www.clifford.at/icestorm/)
 -   RISCV compiler toolchain
     -   [Binary releases from SciFive](https://www.sifive.com/software)
     -   [Binary releases from riscv-collab on GitHub](https://github.com/riscv-collab/riscv-gnu-toolchain/releases)
--   [LiteX SoC Builder](https://github.com/enjoy-digital/litex)
-    -   install inside a python virtual env using the included `setup-venv.sh` script
+-   [LiteX SoC Builder](https://github.com/enjoy-digital/litex) _(automatically installed as git submodules)_
+    -   _optional:_ manually install inside a python virtual env using the included `setup-venv.sh` script
     -   _optional:_ [Install globally using `litex_setup.py`](https://github.com/enjoy-digital/litex#quick-start-guide)
--   _For debugging and testing:_ [wishbone-utils](https://github.com/litex-hub/wishbone-utils)
+-   For debugging and testing:_ [wishbone-utils](https://github.com/litex-hub/wishbone-utils)
     -   [wishbone-tool precompiled binaries](https://github.com/litex-hub/wishbone-utils/releases)
 
 
@@ -280,24 +281,29 @@ to various degrees.
 VSCode Setup
 ------------
 
-The VSCode IDE works quite well on this project when configured correctly.
+The [VSCode IDE](https://code.visualstudio.com/) works quite well on this project when configured correctly.
 Both the Python and C/C++ features work at the same time, which is handy
 when switching between editing the LiteX Python SoC description and the C software.
 You can use `tools/dot-vscode-example` as a starting point for your own configuration.
 
-For automagic vscode setup use the following commands:
+For automagic vscode setup use the following command:
 
 ```shell
-$ cp -r tools/dot-vscode-example .vscode
-$ jq ".configurations[].compilerPath=\"$(which riscv64-unknown-elf-gcc)\"" tools/dot-vscode-example/c_cpp_properties.json > .vscode/c_cpp_properties.json
-# You can also just edit the file manually with your riscv64-unknown-elf-gcc path
+$ ./tools/vscode-setup.sh
 ```
 
-You can install the following extensions:
+You may want to install the following extensions:
 -   Python
 -   C/C++
 -   RISC-V Support (for RISCV assembly code syntax colouring)
 
+If you prefer using [VSCodium](https://vscodium.com/) and/or use
+the [clangd](https://clangd.llvm.org/) plugin; you can generate a
+`compile_commands.json` file using [bear](https://github.com/rizsotto/Bear).
+
+```shell
+$ make bios-clean && bear make bios
+```
 
 See Also
 --------
