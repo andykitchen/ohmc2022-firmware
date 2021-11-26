@@ -3,3 +3,4 @@ csr.csv
 analyzer.csv
 dump.vcd
 femtorv32_quark.v
+compile_commands.json
