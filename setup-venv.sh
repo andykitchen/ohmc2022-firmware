@@ -11,10 +11,6 @@ source $VENV/bin/activate || exit 1
 
 pip install -r requirements.txt
 
-find deps -maxdepth 2 -name "setup.py" | while read line; do
-	(
-		echo install "$line"
-		cd `dirname "$line"` &&
-		pip install -e .
-	)
+for f in deps/**/setup.py; do
+	( cd $(dirname $f) && pip install -e . )
 done

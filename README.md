@@ -294,16 +294,38 @@ $ ./tools/vscode-setup.sh
 
 You may want to install the following extensions:
 -   Python
+-   Pylance
 -   C/C++
 -   RISC-V Support (for RISCV assembly code syntax colouring)
+-   Verilog-HDL
 
 If you prefer using [VSCodium](https://vscodium.com/) and/or use
-the [clangd](https://clangd.llvm.org/) plugin; you can generate a
-`compile_commands.json` file using [bear](https://github.com/rizsotto/Bear).
+the [clangd](https://clangd.llvm.org/) extension. You can generate a
+`compile_commands.json` file with this command:
+
+```shell
+make compile_commands.json
+```
+
+Or using [bear](https://github.com/rizsotto/Bear):
 
 ```shell
 $ make bios-clean && bear make bios
 ```
+
+VSCodium alternative extensions (Pylance and C/C++ intellisense are proprietary):
+-   Python
+-   Pyright
+    (add `{"python.analysis.typeCheckingMode": "off"}` to `settings.json`, LiteX confuses Pyright)
+-   clangd
+-   RISC-V Support ([download the VSIX](https://marketplace.visualstudio.com/items?itemName=zhwu95.riscv) and manually install)
+-   Verilog-HDL
+
+Happily VSCodium + LiteX + Icestorm + RISCV is really a match made in heaven, giving
+IDE development / debugging of full SoC gateware and software with an
+all Open Source stack. Both featureful and refreshingly light weight, esp. when compared to
+vendor SDKs.
+
 
 See Also
 --------
