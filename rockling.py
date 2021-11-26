@@ -121,6 +121,9 @@ class _CRG(Module, AutoDoc):
         self.clock_domains.cd_por = ClockDomain()
         self.reset = Signal()
 
+        # Certain internal parts of LiteX expect reset to be called `rst'
+        self.rst = self.reset
+
         self.clock_domains.cd_sys = ClockDomain()
         self.clock_domains.cd_usb_12 = ClockDomain()
         self.clock_domains.cd_usb_48 = ClockDomain()
@@ -242,6 +245,11 @@ class BaseSoC(SoCCore, AutoDoc):
                                   depth=1000,
                                   clock_domain="sys",
                                   csr_csv="analyzer.csv")
+
+        # fixup CPU reset signal
+        if kwargs.get("cpu_type") == 'femtorv':
+            cpu = self.cpu
+            cpu.cpu_params['i_reset'] = ~(ResetSignal("sys") | cpu.reset)
 
         #self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
         #        ("0x45", "E", "Fomu EVT"),
