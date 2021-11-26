@@ -60,7 +60,7 @@ void NOINLINE rgb_init(void) {
 	rgb_write(BREATHE_ENABLE | BREATHE_MODE_FIXED | BREATHE_RATE_MS(256), LEDDBCFR);
 }
 
-void rgb_set(uint8_t r, uint8_t g, uint8_t b) {
+void NOINLINE rgb_set(uint8_t r, uint8_t g, uint8_t b) {
 	rgb_write(r, LEDDPWRR);
 	rgb_write(g, LEDDPWRG);
 	rgb_write(b, LEDDPWRB);
