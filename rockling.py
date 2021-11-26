@@ -54,31 +54,9 @@ from rtl.freq_counter import FrequencyCounter
 class Platform(LatticePlatform):
     def __init__(self, revision=None, toolchain="icestorm"):
         self.revision = revision
-        if revision == "evt":
-            from litex_boards.platforms.fomu_evt import _io, _connectors
-            LatticePlatform.__init__(self, "ice40-up5k-sg48", _io, _connectors, toolchain="icestorm")
-            self.spi_size = 16 * 1024 * 1024
-            self.spi_dummy = 6
-        elif revision == "dvt":
-            from litex_boards.platforms.fomu_pvt import _io, _connectors
-            LatticePlatform.__init__(self, "ice40-up5k-uwg30", _io, _connectors, toolchain="icestorm")
-            self.spi_size = 2 * 1024 * 1024
-            self.spi_dummy = 6
-        elif revision == "pvt":
-            from litex_boards.platforms.fomu_pvt import _io, _connectors
-            LatticePlatform.__init__(self, "ice40-up5k-uwg30", _io, _connectors, toolchain="icestorm")
-            self.spi_size = 2 * 1024 * 1024
-            self.spi_dummy = 6
-        elif revision == "hacker":
-            from litex_boards.platforms.fomu_hacker import _io, _connectors
-            LatticePlatform.__init__(self, "ice40-up5k-uwg30", _io, _connectors, toolchain="icestorm")
-            self.spi_size = 2 * 1024 * 1024
-            self.spi_dummy = 4
-        elif revision == "rockling_evt":
+        if revision == "rockling_evt":
             from rockling_evt import _io, _connectors
             LatticePlatform.__init__(self, "ice40-up5k-sg48", _io, _connectors, toolchain="icestorm")
-            self.spi_size = 16 * 1024 * 1024
-            self.spi_dummy = 6
         else:
             raise ValueError("Unrecognized revision: {}.  Known values: evt, dvt, pvt, hacker".format(revision))
 
@@ -212,8 +190,7 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.spram = Up5kSPRAM(size=spram_size)
         self.register_mem("sram", self.mem_map["sram"], self.spram.bus, spram_size)
 
-        # default depth seems to cause timing problems
-        self.submodules.messible = Messible(depth=16)
+        self.submodules.messible = Messible()
 
         i2c_pads0 = platform.request("i2c", 0)
         i2c_pads1 = platform.request("i2c", 1)
@@ -250,15 +227,6 @@ class BaseSoC(SoCCore, AutoDoc):
         if kwargs.get("cpu_type") == 'femtorv':
             cpu = self.cpu
             cpu.cpu_params['i_reset'] = ~(ResetSignal("sys") | cpu.reset)
-
-        #self.submodules.version = Version(platform.revision, self, pnr_seed, models=[
-        #        ("0x45", "E", "Fomu EVT"),
-        #        ("0x44", "D", "Fomu DVT"),
-        #        ("0x50", "P", "Fomu PVT (production)"),
-        #        ("0x48", "H", "Fomu Hacker"),
-        #        ("0x65", "Q", "Rockling EVT"),
-        #        ("0x3f", "?", "Unknown model"),
-        #    ])
 
         # Override default LiteX's yosys/build templates
         assert hasattr(platform.toolchain, "yosys_template")
