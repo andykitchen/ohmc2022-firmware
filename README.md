@@ -278,6 +278,28 @@ This is very ghetto debugging but it gets the job done. Ideally one could automa
 to various degrees.
 
 
+Hot Reload
+-----------
+
+To speed up debugging you can hot reload binaries onto the rocking,
+to enable this you need to compile your bitstream with reloading support.
+Specifically it must have a `ROM' that is writable / unlocked:
+
+```
+$ make BITSTREAM_FLAGS="--rw-rom"
+$ make bitstream-load
+```
+
+Then run:
+
+```
+$ make bios-reload
+```
+
+NOTE: this command may spit out some red error messages, but it seems to work anyway.
+This seems to be weird behaviour from `wishbone-tool`.
+
+
 VSCode Setup
 ------------
 

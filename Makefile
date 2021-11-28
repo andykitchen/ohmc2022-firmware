@@ -1,4 +1,5 @@
-BIOS_DIR  := build/rockling/software/bios
+BIOS_DIR := build/rockling/software/bios
+BITSTREAM_FLAGS ?=
 
 all: bitstream
 
@@ -8,7 +9,7 @@ bitstream-load: build/rockling/gateware/rockling.bin
 	dfu-util -D build/rockling/gateware/rockling.bin
 
 build/rockling/gateware/rockling.bin: rockling.py rockling_evt.py lxbuildenv.py custom-bios/* | venv
-	venv/bin/python rockling.py
+	venv/bin/python rockling.py $(BITSTREAM_FLAGS)
 
 venv:
 	git submodule update --init --recursive
@@ -20,6 +21,10 @@ bios:
 
 bios-clean:
 	rm -rf ${BIOS_DIR}/*.[od] ${BIOS_DIR}/bios.bin ${BIOS_DIR}/bios.elf
+
+# NOTE: bitstream must be specially compiled, see README
+bios-reload: bios
+	bash tools/live_reload.sh
 
 venv/bin/intercept-build: | venv
 	pip install scan-build

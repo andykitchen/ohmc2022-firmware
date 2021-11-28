@@ -286,6 +286,7 @@ def main():
     parser.add_argument("--revision", default="rockling_evt", help="platform revision")
     parser.add_argument("--no-cpu", help="build without a CPU", action="store_true")
     parser.add_argument("--rom", type=str, help="path to rom binary")
+    parser.add_argument("--rw-rom", help="make ROM writable", action="store_true")
     parser.add_argument("--with-analyzer", help="include litescope logic analyzer block", action="store_true")
     args = parser.parse_args()
 
@@ -303,12 +304,18 @@ def main():
         rom_init = []
         rom_size = 0x2000
 
+    if args.rw_rom:
+        integrated_rom_mode = 'rw'
+    else:
+        integrated_rom_mode = 'r'
+
     platform = Platform(revision=args.revision)
     soc = BaseSoC(platform, pnr_seed=args.seed,
                   cpu_type=cpu_type, cpu_variant=cpu_variant,
                   usb_debug=True, with_analyzer=args.with_analyzer,
                   integrated_rom_size=rom_size,
                   integrated_rom_init=rom_init,
+                  integrated_rom_mode=integrated_rom_mode,
                   with_timer=True)
 
     builder = MinimalBuilder(soc, csr_csv="csr.csv", compile_software=True, compile_gateware=True)
