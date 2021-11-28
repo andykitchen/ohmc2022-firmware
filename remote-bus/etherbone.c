@@ -108,13 +108,25 @@ uint32_t eb_read32(struct eb_connection *conn, uint32_t addr) {
     } else {
         // If we are connected via TCP we need to take into account short reads
         // because it is a stream oriented protocol.
-        int rd_size;
+        int ret;
         uint8_t *p   = raw_pkt;
         uint8_t *end = raw_pkt + sizeof(raw_pkt);
 
         while (p < end) {
-            rd_size = eb_recv(conn, p, end - p);
-            p += rd_size;
+            ret = eb_recv(conn, p, end - p);
+
+            if (ret < 0) {
+                switch (errno) {
+                    case EINTR:
+                    case EAGAIN:
+                        continue;
+                    default:
+                        fprintf(stderr, "socket read error: %s\n", strerror(errno));
+                        return -1;
+                }
+            }
+
+            p += ret;
         }
     }
 
