@@ -97,11 +97,26 @@ uint32_t eb_read32(struct eb_connection *conn, uint32_t addr) {
 
     eb_send(conn, raw_pkt, sizeof(raw_pkt));
 
-    int count = eb_recv(conn, raw_pkt, sizeof(raw_pkt));
-    if (count != sizeof(raw_pkt)) {
-        fprintf(stderr, "unexpected read length: %d\n", count);
-        return -1;
+    if (conn->is_direct) {
+        int count = eb_recv(conn, raw_pkt, sizeof(raw_pkt));
+
+        if (count != sizeof(raw_pkt)) {
+            fprintf(stderr, "unexpected read length: %d\n", count);
+            return -1;
+        }
+    } else {
+        // If we are connected via TCP we need to take into account short reads
+        // because it is a stream oriented protocol.
+        int rd_size;
+        uint8_t *p   = raw_pkt;
+        uint8_t *end = raw_pkt + sizeof(raw_pkt);
+
+        while (p < end) {
+            rd_size = eb_recv(conn, p, end - p);
+            p += rd_size;
+        }
     }
+
     return eb_unfill_read32(raw_pkt);
 }
 
