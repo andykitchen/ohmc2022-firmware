@@ -24,19 +24,19 @@ void NOINLINE i2c_init(void) {
 	clock prescaler formula is apparently (clk_htz / (5*i2c_htz)) - 1
 	e.g. (12e6 / (5*100e3)) - 1 == 23
 	*/
-	i2c0_prescale_write(23);
+	i2c1_prescale_write(23);
 
 	flags = 0;
-	flags = i2c0_control_ien_replace(flags, 0);  /* disable interrupts from the core */
-	flags = i2c0_control_en_replace(flags, 1);   /* enable the core */
+	flags = i2c1_control_ien_replace(flags, 0);  /* disable interrupts from the core */
+	flags = i2c1_control_en_replace(flags, 1);   /* enable the core */
 
 	/* write control flags */
-	i2c0_control_write(flags);
+	i2c1_control_write(flags);
 }
 
 
-#define STATUS_ACK_ARB_MASK ((1<<CSR_I2C0_STATUS_RXACK_OFFSET) | (1<<CSR_I2C0_STATUS_ARBLOST_OFFSET))
-#define STATUS_ARBLOST_MASK (1<<CSR_I2C0_STATUS_ARBLOST_OFFSET)
+#define STATUS_ACK_ARB_MASK ((1<<CSR_I2C1_STATUS_RXACK_OFFSET) | (1<<CSR_I2C1_STATUS_ARBLOST_OFFSET))
+#define STATUS_ARBLOST_MASK (1<<CSR_I2C1_STATUS_ARBLOST_OFFSET)
 
 #define CHECK_ACK(status)  if (status & STATUS_ACK_ARB_MASK) { goto error; }
 #define CHECK_ARB(status)  if (status & STATUS_ARBLOST_MASK) { goto error; }
@@ -90,9 +90,9 @@ error:
 	if (err_status)
 		*err_status = status;
 
-	if (i2c0_status_rxack_extract(status))
+	if (i2c1_status_rxack_extract(status))
 		return ENACK;
-	else if (i2c0_status_arblost_extract(status))
+	else if (i2c1_status_arblost_extract(status))
 		return EARB;
 	else
 		return EUNK;
@@ -109,9 +109,9 @@ static int i2c_wait_tip(void) {
 
 	do {
 		nop_delay();
-		status = i2c0_status_read();
+		status = i2c1_status_read();
 	}
-	while (i2c0_status_tip_extract(status));
+	while (i2c1_status_tip_extract(status));
 
 	return status;
 }
@@ -126,12 +126,12 @@ static void i2c_tx_char(int *status, int tx, int sta) {
 
 	tx &= 0xff;  /* mask out only 8 low bits of tx data */
 
-	i2c0_txr_write(tx);  /* setup tx data register */
+	i2c1_txr_write(tx);  /* setup tx data register */
 
 	cmd = 0;
-	cmd = i2c0_command_wr_replace(cmd, 1);    /* write command bit */
-	cmd = i2c0_command_sta_replace(cmd, sta); /* generate START condition? */
-	i2c0_command_write(cmd);                  /* send address byte */
+	cmd = i2c1_command_wr_replace(cmd, 1);    /* write command bit */
+	cmd = i2c1_command_sta_replace(cmd, sta); /* generate START condition? */
+	i2c1_command_write(cmd);                  /* send address byte */
 
 	/* wait until transfer is complete */
 	*status = i2c_wait_tip();
@@ -146,14 +146,14 @@ static int i2c_rx_char(int *status, int nack, int stop) {
 	int cmd;
 
 	cmd = 0;
-	cmd = i2c0_command_rd_replace(cmd, 1);     /* read command bit */
-	cmd = i2c0_command_ack_replace(cmd, nack); /* generate ACK? */
-	cmd = i2c0_command_sto_replace(cmd, stop); /* generate STOP condition? */
-	i2c0_command_write(cmd);                   /* send address byte */
+	cmd = i2c1_command_rd_replace(cmd, 1);     /* read command bit */
+	cmd = i2c1_command_ack_replace(cmd, nack); /* generate ACK? */
+	cmd = i2c1_command_sto_replace(cmd, stop); /* generate STOP condition? */
+	i2c1_command_write(cmd);                   /* send address byte */
 
 	/* wait until transfer is complete */
 	*status = i2c_wait_tip();
 
 	/* return value in rxr register */
-	return i2c0_rxr_read();
+	return i2c1_rxr_read();
 }

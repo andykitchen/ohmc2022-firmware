@@ -194,8 +194,8 @@ class BaseSoC(SoCCore, AutoDoc):
 
         i2c_pads0 = platform.request("i2c", 0)
         i2c_pads1 = platform.request("i2c", 1)
-        self.submodules.i2c0 = RTLI2C(platform, i2c_pads1)
-        #self.submodules.i2c0 = HardI2C(platform, i2c_pads0)
+        self.submodules.i2c1 = RTLI2C(platform, i2c_pads1)
+        #self.submodules.i2c1 = HardI2C(platform, i2c_pads1)
 
         self.submodules.reboot = SBWarmBoot(self, offsets=None)
 
