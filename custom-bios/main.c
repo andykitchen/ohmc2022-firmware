@@ -3,10 +3,7 @@
 #include "util.h"
 #include "rgb.h"
 #include "i2c.h"
-
-#define DAC_I2C_ADDR   0x62
-#define CODEC_I2C_ADDR 0x0A
-#define CODEC_PARTID   0xA0
+#include "i2c_addr.h"
 
 volatile int debug_status;
 

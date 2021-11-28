@@ -19,6 +19,8 @@ static int  i2c_rx_char(int *status, int nack, int stop);
 void NOINLINE i2c_init(void) {
 	int flags;
 
+	i2c1_core_reset_reset_write(1);
+
 	/*
 	setup clock prescaler...
 	clock prescaler formula is apparently (clk_htz / (5*i2c_htz)) - 1
