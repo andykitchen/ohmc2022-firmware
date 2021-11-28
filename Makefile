@@ -1,4 +1,4 @@
-BIOS_DIR := build/rockling/software/bios
+BIOS_DIR ?= build/rockling/software/bios
 BITSTREAM_FLAGS ?=
 
 all: bitstream
@@ -9,7 +9,7 @@ bitstream-load: build/rockling/gateware/rockling.bin
 	dfu-util -D build/rockling/gateware/rockling.bin
 
 build/rockling/gateware/rockling.bin: rockling.py rockling_evt.py lxbuildenv.py custom-bios/* | venv
-	venv/bin/python rockling.py $(BITSTREAM_FLAGS)
+	( . venv/bin/activate && python rockling.py $(BITSTREAM_FLAGS) )
 
 venv:
 	git submodule update --init --recursive
@@ -31,7 +31,7 @@ venv/bin/intercept-build: | venv
 
 compile_commands.json: venv/bin/intercept-build custom-bios/Makefile build/rockling/software/include/generated/variables.mak
 	make bios-clean
-	venv/bin/intercept-build make bios
+	( . venv/bin/activate && intercept-build make bios )
 
 clean:
 	rm -rf build
