@@ -24,7 +24,7 @@ bios-clean:
 
 # NOTE: bitstream must be specially compiled, see README
 bios-reload: bios
-	bash tools/live_reload.sh
+	bash tools/hot_reload.sh
 
 venv/bin/intercept-build: | venv
 	pip install scan-build
