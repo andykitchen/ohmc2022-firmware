@@ -7,5 +7,6 @@
 
 void i2c_init(void);
 int i2c_read_txn(int addr, int tx, int tx2, int *status);
+int i2c_general_call_reset(void);
 
 #endif

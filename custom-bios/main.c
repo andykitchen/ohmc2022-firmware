@@ -3,7 +3,8 @@
 #include "util.h"
 #include "rgb.h"
 #include "i2c.h"
-#include "i2c_addr.h"
+#include "dac.h"
+#include "codec.h"
 
 volatile int debug_status;
 
@@ -37,33 +38,34 @@ int main(void) {
 	return 0;
 }
 
-/* somple power on self test of i2c devices */
+/* simple power on self test of i2c devices */
 static void post(void) {
 	int rx, status;
 	int post_failed = 0;
 
-	/* ask the DAC for it's own address */
-	rx = i2c_read_txn(DAC_I2C_ADDR, 0xd6, -1, &status);
+	i2c_general_call_reset();
+
+	/* ask the DAC for its own address */
+	rx = i2c_read_txn(DAC_I2C_ADDR, DAC_ID_CMD, -1, &status);
 
 	debug_status = rx & 0xffff;
 
-	if (BYTE0(rx) != DAC_I2C_ADDR) {
-		nah_mate();
+	if (BYTE0(rx) != DAC_I2C_ADDR)
 		post_failed = 1;
-	}
 
 	/* ask the CODEC to identify itself */
 	rx = i2c_read_txn(CODEC_I2C_ADDR, 0x00, 0x00, &status);
 
-	if (BYTE1(rx) != CODEC_PARTID) {
-		nah_mate();
+	if (BYTE1(rx) != CODEC_PARTID)
 		post_failed = 1;
-	}
 
 	debug_status |= (rx & 0xffff) << 16;
 
-	if (!post_failed)
+	if (!post_failed) {
 		all_good();
+	} else {
+		nah_mate();
+	}
 }
 
 static void all_good(void) {

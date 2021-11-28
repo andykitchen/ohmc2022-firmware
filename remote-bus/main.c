@@ -1,14 +1,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include "etherbone.h"
 #include "generated/csr.h"
 
 #include "rgb.h"
 #include "i2c.h"
-#include "i2c_addr.h"
+#include "dac.h"
+#include "codec.h"
 
 static struct eb_connection *eb;
 
@@ -40,10 +40,18 @@ int main(int argc, char **argv) {
 
     rgb_set(0xa0, 0x30, 0x60);
 
+    fprintf(stderr, "i2c general call reset... ");
+    int ret = i2c_general_call_reset();
+    if (ret < 0) {
+        fprintf(stderr, "failed!\n");
+    } else {
+        fprintf(stderr, "sent\n");
+    }
+
     int rx, status;
-    rx = i2c_read_txn(DAC_I2C_ADDR, 0xd6, -1, &status);
+    rx = i2c_read_txn(DAC_I2C_ADDR, DAC_ID_CMD, -1, &status);
     fprintf(stderr, "DAC: 0x%04x\n", rx);
-    rx = i2c_read_txn(CODEC_I2C_ADDR, 0x00, 0x00, &status);
+    rx = i2c_read_txn(CODEC_I2C_ADDR, CODEC_ID_CMD1, CODEC_ID_CMD2, &status);
     fprintf(stderr, "CODEC: 0x%04x\n", rx);
 
     return 0;

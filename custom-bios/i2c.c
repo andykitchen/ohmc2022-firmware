@@ -5,15 +5,16 @@
 #include "util.h"
 
 #define START 0x1
-#define STOP  0x1
+#define STOP  0x2
+
 #define ACK   0x0
 #define NACK  0x1
 
 static void nop_delay(void);
+static int  status_error_code(int status);
 static int  i2c_wait_tip(void);
 static void i2c_tx_char(int *status, int tx, int sta);
 static int  i2c_rx_char(int *status, int nack, int stop);
-
 
 /* initialize i2c */
 void NOINLINE i2c_init(void) {
@@ -92,17 +93,39 @@ error:
 	if (err_status)
 		*err_status = status;
 
+	return status_error_code(status);
+}
+
+/* See MCP47CXBXX datasheet Figure 7-9 pg. 84: General Call Reset Command */
+int i2c_general_call_reset(void) {
+	int status;
+
+	/* send I2C general call address */
+	i2c_tx_char(&status, 0x00, START);
+	CHECK_ACK(status);
+
+	/* send I2C general call reset command */
+	i2c_tx_char(&status, 0x06, STOP);
+	CHECK_ACK(status);
+
+	return 0;
+
+error:
+	return status_error_code(status);
+}
+
+static void nop_delay(void) {
+	for (int i = 23*8; i >= 0; i--)
+		asm volatile ( "nop" );
+}
+
+static int status_error_code(int status) {
 	if (i2c1_status_rxack_extract(status))
 		return ENACK;
 	else if (i2c1_status_arblost_extract(status))
 		return EARB;
 	else
 		return EUNK;
-}
-
-static void nop_delay(void) {
-	for (int i = 23*8; i >= 0; i--)
-		asm volatile ( "nop" );
 }
 
 /* wait for a pending i2c transfer to complete */
@@ -119,11 +142,11 @@ static int i2c_wait_tip(void) {
 }
 
 /* transmit a single byte
- * @status status out
- * @tx     byte to transfer
- * @sta    generate START / RESTART condition
+ * @status  status out
+ * @tx      byte to transfer
+ * @sta_sto generate START / RESTART / STOP condition
  */
-static void i2c_tx_char(int *status, int tx, int sta) {
+static void i2c_tx_char(int *status, int tx, int sta_sto) {
 	int cmd;
 
 	tx &= 0xff;  /* mask out only 8 low bits of tx data */
@@ -131,9 +154,10 @@ static void i2c_tx_char(int *status, int tx, int sta) {
 	i2c1_txr_write(tx);  /* setup tx data register */
 
 	cmd = 0;
-	cmd = i2c1_command_wr_replace(cmd, 1);    /* write command bit */
-	cmd = i2c1_command_sta_replace(cmd, sta); /* generate START condition? */
-	i2c1_command_write(cmd);                  /* send address byte */
+	cmd = i2c1_command_wr_replace(cmd, 1);                /* write command bit */
+	cmd = i2c1_command_sta_replace(cmd, sta_sto & START); /* generate START condition? */
+	cmd = i2c1_command_sto_replace(cmd, sta_sto & STOP);  /* generate STOP condition? */
+	i2c1_command_write(cmd);                              /* send address byte */
 
 	/* wait until transfer is complete */
 	*status = i2c_wait_tip();
@@ -144,14 +168,14 @@ static void i2c_tx_char(int *status, int tx, int sta) {
  * @nack   generate NACK (otherwise generate ACK)
  * @stop   generate STOP condition
  */
-static int i2c_rx_char(int *status, int nack, int stop) {
+static int i2c_rx_char(int *status, int nack, int sto) {
 	int cmd;
 
 	cmd = 0;
-	cmd = i2c1_command_rd_replace(cmd, 1);     /* read command bit */
-	cmd = i2c1_command_ack_replace(cmd, nack); /* generate ACK? */
-	cmd = i2c1_command_sto_replace(cmd, stop); /* generate STOP condition? */
-	i2c1_command_write(cmd);                   /* send address byte */
+	cmd = i2c1_command_rd_replace(cmd, 1);           /* read command bit */
+	cmd = i2c1_command_ack_replace(cmd, nack);       /* generate ACK? */
+	cmd = i2c1_command_sto_replace(cmd, sto & STOP); /* generate STOP condition? */
+	i2c1_command_write(cmd);                         /* send address byte */
 
 	/* wait until transfer is complete */
 	*status = i2c_wait_tip();
