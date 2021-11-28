@@ -32,6 +32,8 @@ venv/bin/intercept-build: | venv
 compile_commands.json: venv/bin/intercept-build custom-bios/Makefile build/rockling/software/include/generated/variables.mak
 	make bios-clean
 	( . venv/bin/activate && intercept-build make bios )
+# FIXME is there a better way of doing this?
+	sed -i'' 's/"cc"/"riscv64-unknown-elf-gcc"/g' compile_commands.json
 
 clean:
 	rm -rf build
