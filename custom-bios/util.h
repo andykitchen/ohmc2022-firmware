@@ -3,9 +3,13 @@
 
 #define NOINLINE __attribute__ ((noinline))
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 extern volatile int debug_status;
 
-inline int BYTE0(int x) { return (x & 0x00ff); }
-inline int BYTE1(int x) { return (x & 0xff00) >> 8; }
+inline int LO(int x) { return (x & 0x00ff); }
+inline int HI(int x) { return (x & 0xff00) >> 8; }
 
 #endif

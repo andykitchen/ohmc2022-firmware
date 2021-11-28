@@ -7,6 +7,8 @@ OBJECTS = \
 	isr.o             \
 	rgb.o             \
 	i2c.o             \
+	dac.o             \
+	codec.o           \
 	loop.o            \
 	main.o
 

@@ -50,16 +50,47 @@ static void post(void) {
 
 	debug_status = rx & 0xffff;
 
-	if (BYTE0(rx) != DAC_I2C_ADDR)
+	if (LO(rx) != DAC_I2C_ADDR)
 		post_failed = 1;
 
 	/* ask the CODEC to identify itself */
 	rx = i2c_read_txn(CODEC_I2C_ADDR, 0x00, 0x00, &status);
 
-	if (BYTE1(rx) != CODEC_PARTID)
+	if (HI(rx) != CODEC_PARTID)
 		post_failed = 1;
 
 	debug_status |= (rx & 0xffff) << 16;
+
+	/* Write to 0x00 and 0x01 volatile DAC registers
+	   and read back to compare values */
+	for (int addr = 0; addr < 0x02; addr++) {
+		static const int val = 0x7e;
+		rx = dac_write_txn(addr, val);
+		if (rx < 0)
+			post_failed = 1;
+
+		rx = dac_read_txn(addr);
+		if (rx != val)
+			post_failed = 1;
+	}
+
+	/* Write to the CODEC volume register and
+	   read back to compare values */
+	static const int val = 0x0001;
+
+	rx = codec_write_txn(CHIP_ANA_ADC_CTRL, val);
+	if (rx < 0)
+		post_failed = 1;
+
+	rx = codec_read_txn(CHIP_ANA_ADC_CTRL);
+	if (rx != val)
+		post_failed = 1;
+
+	rx = codec_write_txn(CHIP_ANA_ADC_CTRL, 0x0000);
+	if (rx < 0)
+		post_failed = 1;
+
+	i2c_general_call_reset();
 
 	if (!post_failed) {
 		all_good();

@@ -49,10 +49,52 @@ int main(int argc, char **argv) {
     }
 
     int rx, status;
-    rx = i2c_read_txn(DAC_I2C_ADDR, DAC_ID_CMD, -1, &status);
-    fprintf(stderr, "DAC: 0x%04x\n", rx);
-    rx = i2c_read_txn(CODEC_I2C_ADDR, CODEC_ID_CMD1, CODEC_ID_CMD2, &status);
-    fprintf(stderr, "CODEC: 0x%04x\n", rx);
+    rx = dac_read_txn(DAC_ID_CMD);
+    fprintf(stderr, "DAC ADDR: 0x%04x\n", rx);
 
+    rx = dac_read_txn(0x00);
+    fprintf(stderr, "DAC0: 0x%04x\n", rx);
+
+    rx = dac_read_txn(0x01);
+    fprintf(stderr, "DAC1: 0x%04x\n", rx);
+
+    fprintf(stderr, "writing DAC0 register... ");
+    rx = dac_write_txn(0x00, 0x006f);
+    if (rx < 0) {
+        fprintf(stderr, "failed!\n");
+    } else {
+        fprintf(stderr, "done\n");
+    }
+
+    rx = dac_read_txn(0x00);
+    fprintf(stderr, "DAC0: 0x%04x\n", rx);
+
+    rx = codec_read_txn(CHIP_ID);
+    fprintf(stderr, "CODEC ID: 0x%04x\n", rx);
+
+    rx = codec_read_txn(CHIP_ANA_ADC_CTRL);
+    fprintf(stderr, "CHIP_ANA_ADC_CTRL: 0x%04x\n", rx);
+
+    fprintf(stderr, "writing CODEC CHIP_ANA_ADC_CTRL register... ");
+    rx = codec_write_txn(CHIP_ANA_ADC_CTRL, 0x0001);
+    if (rx < 0) {
+        fprintf(stderr, "failed!\n");
+    } else {
+        fprintf(stderr, "done\n");
+    }
+
+    rx = codec_read_txn(CHIP_ANA_ADC_CTRL);
+    fprintf(stderr, "CHIP_ANA_ADC_CTRL: 0x%04x\n", rx);
+
+    fprintf(stderr, "writing zero to CODEC CHIP_ANA_ADC_CTRL register... ");
+    rx = codec_write_txn(CHIP_ANA_ADC_CTRL, 0x0000);
+    if (rx < 0) {
+        fprintf(stderr, "failed!\n");
+    } else {
+        fprintf(stderr, "done\n");
+    }
+
+    rx = codec_write_txn(0x0030, 0x7260);
+    
     return 0;
 }
