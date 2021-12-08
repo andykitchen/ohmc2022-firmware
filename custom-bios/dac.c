@@ -2,6 +2,7 @@
 
 #include "dac.h"
 
+#include "system.h"
 #include "util.h"
 #include "i2c.h"
 
@@ -9,35 +10,48 @@
 /* initialise the DAC subsystem
  */
 void dac_init(void) {
-    /* DAC latch pin should be held high */
-    dac_latch_out_write(1);
+    /* Just hold DAC latch low because we don't need
+       high precision coordination between the channels */
+    dac_latch_out_write(0);
 }
 
 /* read DAC i2c register
- * @tx address of register to read
+ * @reg address of register to read
  *
  * @returns value read or negative i2c error status code
  */
-int dac_read_txn(int tx) {
+int dac_read_txn(int reg) {
+    int tx;
+
+    /* tx data byte format for read is `aaaaa11x`
+       where a is address bits and x is unused
+       see Figure 7-1 page 75 in the MCP47CXBXX datasheet */
+    tx = (reg << 3) | 0x06;
+
     return i2c_read_txn(DAC_I2C_ADDR, tx, -1, NULL);
 }
 
 /* write DAC i2c register
- * @tx   address of register to read
+ * @reg  address of register to read
  * @data 16-bit value to write to register
  *
  * @returns value read or negative i2c error status code
  */
-int dac_write_txn(int tx, int data) {
-    int d0, d1;
+int dac_write_txn(int reg, int data) {
+    int tx, d0, d1;
 
     d0 = HI(data);
     d1 = LO(data);
 
+    /* tx data byte format for write `aaaaa00x`
+       where a is address bits and x is unused
+       see Figure 7-1 page 75 in the MCP47CXBXX datasheet */
+    tx = (reg << 3);
+
     return i2c_write_txn(DAC_I2C_ADDR, tx, -1, d0, d1, NULL);
 }
 
-/* set both values of DAC simultanously
+/* set DAC output voltage levels
  * @v0 value for DAC channel 0 (only set if greater than 0)
  * @v2 value for DAC channel 1 (only set if greater than 0)
  *
@@ -46,8 +60,6 @@ int dac_write_txn(int tx, int data) {
 int dac_set_val(int v0, int v1) {
     /*
     Writes i2c register address 0x00 and 0x01 then
-    pulses the DAC latch pin low to cause the DAC
-    voltages to change.
     */
     int ret;
 
@@ -60,10 +72,6 @@ int dac_set_val(int v0, int v1) {
         ret = dac_write_txn(0x01, v1);
         if (ret < 0) return ret;
     }
-
-    /* pulse DAC latch pin low to actually change voltages */
-    dac_latch_out_write(0);
-    dac_latch_out_write(1);
 
     return 0;
 }

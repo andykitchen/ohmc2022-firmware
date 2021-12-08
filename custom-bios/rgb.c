@@ -62,8 +62,8 @@ void NOINLINE rgb_init(void) {
 
 void NOINLINE rgb_set(uint8_t r, uint8_t g, uint8_t b) {
 	rgb_write(r, LEDDPWRR);
-	rgb_write(g, LEDDPWRG);
-	rgb_write(b, LEDDPWRB);
+	rgb_write(b, LEDDPWRG);
+	rgb_write(g, LEDDPWRB);
 }
 
 // The amount of time to stay off or on

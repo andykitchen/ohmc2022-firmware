@@ -319,9 +319,10 @@ def main():
                   with_timer=True)
 
     builder = MinimalBuilder(soc, csr_csv="csr.csv", compile_software=True, compile_gateware=True)
-    builder.add_software_package('libc')
-    builder.add_software_package('libcompiler_rt')
-    builder.add_software_package('libbase')
+    for name in ['libc', 'libcompiler_rt', 'libbase']:
+        builder.add_software_package(name)
+        builder.add_software_library(name)
+
     vns = builder.build()
 
 
