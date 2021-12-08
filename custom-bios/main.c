@@ -42,7 +42,6 @@ int main(void) {
 	post();
 	extended_post();
 	busy_wait(2000);
-	rgb_set(0x00, 0x00, 0x00);
 	dac_test_loop();
 	counter_loop();
 
