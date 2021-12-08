@@ -18,7 +18,8 @@ csr i2c1_core_reset 1  # reset i2c block
 csr i2c1_prescale 23
 csr i2c1_control  0x80 # enable i2c block
 
-addr=0x62
+#addr=0x62
+addr=0x60
 
 csr i2c1_txr      $[($addr<<1)+0] # address + write
 csr i2c1_command  0x90 # START and send address command
