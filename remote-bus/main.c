@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "etherbone.h"
 #include "generated/csr.h"
@@ -34,6 +35,10 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, "rgb init..\n");
 
+    dac_init();
+
+    fprintf(stderr, "dac init...\n");
+
     i2c_init();
 
     fprintf(stderr, "i2c init...\n");
@@ -49,8 +54,11 @@ int main(int argc, char **argv) {
     }
 
     int rx, status;
-    rx = dac_read_txn(DAC_ID_CMD);
-    fprintf(stderr, "DAC ADDR: 0x%04x\n", rx);
+    rx = dac_read_txn(DAC_ID_REG);
+    fprintf(stderr, "DAC addr: 0x%04x\n", rx);
+
+    rx = dac_read_txn(DAC_STATUS_REG);
+    fprintf(stderr, "DAC status: 0x%04x\n", rx);
 
     rx = dac_read_txn(0x00);
     fprintf(stderr, "DAC0: 0x%04x\n", rx);
@@ -59,7 +67,15 @@ int main(int argc, char **argv) {
     fprintf(stderr, "DAC1: 0x%04x\n", rx);
 
     fprintf(stderr, "writing DAC0 register... ");
-    rx = dac_write_txn(0x00, 0x006f);
+    rx = dac_write_txn(0x00, 0x006e);
+    if (rx < 0) {
+        fprintf(stderr, "failed!\n");
+    } else {
+        fprintf(stderr, "done\n");
+    }
+
+    fprintf(stderr, "writing DAC0 register... ");
+    rx = dac_write_txn(0x00, 0x00ff);
     if (rx < 0) {
         fprintf(stderr, "failed!\n");
     } else {
@@ -68,6 +84,9 @@ int main(int argc, char **argv) {
 
     rx = dac_read_txn(0x00);
     fprintf(stderr, "DAC0: 0x%04x\n", rx);
+
+    rx = dac_read_txn(0x01);
+    fprintf(stderr, "DAC1: 0x%04x\n", rx);
 
     rx = codec_read_txn(CHIP_ID);
     fprintf(stderr, "CODEC ID: 0x%04x\n", rx);
@@ -94,7 +113,22 @@ int main(int argc, char **argv) {
         fprintf(stderr, "done\n");
     }
 
-    rx = codec_write_txn(0x0030, 0x7260);
-    
+    fprintf(stderr, "LED PWM seems to cause noise on OSC 1... turing LEDs off\n");
+    rgb_set(0x00, 0x00, 0x00);
+
+    for (int i = 0; i < 10; i++) {
+        fprintf(stderr, "setting DAC voltage 1\n");
+        dac_set_val(0x00, -1);
+
+        fprintf(stderr, "sleeping 2 seconds\n");
+        sleep(2);
+
+        fprintf(stderr, "setting DAC voltage 2\n");
+        dac_set_val(0xff, -1);
+
+        fprintf(stderr, "sleeping 2 seconds\n");
+        sleep(2);
+    }
+
     return 0;
 }
