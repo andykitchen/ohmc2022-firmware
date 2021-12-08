@@ -4,17 +4,19 @@
 
 #include "util.h"
 
-#define START 0x1
-#define STOP  0x2
+enum i2c_flags {
+	START = 0x1,
+	STOP  = 0x2,
+	NACK  = 0x4,
 
-#define ACK   0x0
-#define NACK  0x1
+	ACK   = 0x0
+};
 
 static int  status_error_code(int status);
 static void nop_delay(void);
 static int  i2c_wait_tip(void);
-static void i2c_tx_char(int *status, int tx, int sta);
-static int  i2c_rx_char(int *status, int nack, int stop);
+static inline void i2c_tx_char(int *status, int tx, enum i2c_flags flags);
+static inline int  i2c_rx_char(int *status, enum i2c_flags flags);
 
 /* initialize i2c */
 void NOINLINE i2c_init(void) {
@@ -78,11 +80,11 @@ int i2c_read_txn(int addr, int tx0, int tx1, int *err_status) {
 	CHECK_ACK(status);
 
 	/* receive with ACK */
-	rx0 = i2c_rx_char(&status, ACK, 0);
+	rx0 = i2c_rx_char(&status, ACK);
 	CHECK_ARB(status);
 
 	/* receive with NACK and STOP */
-	rx1 = i2c_rx_char(&status, NACK, STOP);
+	rx1 = i2c_rx_char(&status, NACK | STOP);
 	CHECK_ARB(status);
 
 	/* the i2c devices we are dealing with send 16-bit values data big-endian */
@@ -194,7 +196,9 @@ static int i2c_wait_tip(void) {
  * @tx      byte to transfer
  * @sta_sto generate START / RESTART / STOP condition flags
  */
-static void i2c_tx_char(int *status, int tx, int sta_sto) {
+static void ALWAYS_INLINE i2c_tx_char(int *status, int tx, enum i2c_flags flags) {
+	/* force inlining this function because it appears long
+	   but it boils down to two stores and a jump */
 	int cmd;
 
 	tx &= 0xff;  /* mask out only 8 low bits of tx data */
@@ -202,10 +206,10 @@ static void i2c_tx_char(int *status, int tx, int sta_sto) {
 	i2c1_txr_write(tx);  /* setup tx data register */
 
 	cmd = 0;
-	cmd = i2c1_command_wr_replace(cmd, 1);                /* write command bit */
-	cmd = i2c1_command_sta_replace(cmd, sta_sto & START); /* generate START condition? */
-	cmd = i2c1_command_sto_replace(cmd, sta_sto & STOP);  /* generate STOP condition? */
-	i2c1_command_write(cmd);                              /* send address byte */
+	cmd = i2c1_command_wr_replace(cmd, 1);                   /* write command bit */
+	cmd = i2c1_command_sta_replace(cmd, !!(flags & START));  /* generate START condition? */
+	cmd = i2c1_command_sto_replace(cmd, !!(flags & STOP));   /* generate STOP condition? */
+	i2c1_command_write(cmd);                                 /* send address byte */
 
 	/* wait until transfer is complete */
 	*status = i2c_wait_tip();
@@ -216,14 +220,14 @@ static void i2c_tx_char(int *status, int tx, int sta_sto) {
  * @nack   generate NACK? (otherwise generate ACK)
  * @stop   generate STOP condition flag
  */
-static int i2c_rx_char(int *status, int nack, int sto) {
+static int ALWAYS_INLINE i2c_rx_char(int *status, enum i2c_flags flags) {
 	int cmd;
 
 	cmd = 0;
-	cmd = i2c1_command_rd_replace(cmd, 1);           /* read command bit */
-	cmd = i2c1_command_ack_replace(cmd, nack);       /* generate ACK? */
-	cmd = i2c1_command_sto_replace(cmd, sto & STOP); /* generate STOP condition? */
-	i2c1_command_write(cmd);                         /* send address byte */
+	cmd = i2c1_command_rd_replace(cmd, 1);                 /* read command bit */
+	cmd = i2c1_command_ack_replace(cmd, !!(flags & NACK)); /* generate NACK? */
+	cmd = i2c1_command_sto_replace(cmd, !!(flags & STOP)); /* generate STOP condition? */
+	i2c1_command_write(cmd);                               /* send address byte */
 
 	/* wait until transfer is complete */
 	*status = i2c_wait_tip();
