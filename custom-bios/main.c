@@ -23,6 +23,7 @@ int main(void) {
 	debug_status = 1;
 
 	rgb_init();
+	dac_init();
 	i2c_init();
 
 	debug_status = 2;
