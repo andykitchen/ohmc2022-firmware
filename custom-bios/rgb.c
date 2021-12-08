@@ -61,6 +61,7 @@ void NOINLINE rgb_init(void) {
 }
 
 void NOINLINE rgb_set(uint8_t r, uint8_t g, uint8_t b) {
+	// On the production rockling the RGB LED colours are wired funny
 	rgb_write(r, LEDDPWRR);
 	rgb_write(b, LEDDPWRG);
 	rgb_write(g, LEDDPWRB);
