@@ -10,7 +10,7 @@ class FrequencyCounter(Module, AutoCSR, AutoDoc):
         self.elapse = CSRStatus(32, name="elapse", description="""number of clock ticks elapsed""")
         self.cycles = CSRStatus(32, name="cycles", description="""number of signal cycles counted""")
 
-        self.ctrl = CSRStorage(1, name="ctrl", fields = [
+        self.ctrl = CSRStorage(name="ctrl", fields = [
             CSRField("reset", size=1, description="Write `1` for a synchronous reset of the counters", pulse=True),
             CSRField("disable", size=1, description="Write `1` to disable counter")
         ])

@@ -3,6 +3,9 @@ BITSTREAM_FLAGS ?=
 
 all: bitstream
 
+test:
+	python -m unittest discover -s test
+
 bitstream: build/rockling/gateware/rockling.bin
 
 bitstream-load: build/rockling/gateware/rockling.bin
@@ -41,4 +44,4 @@ clean:
 nuke:
 	rm -rf build venv
 
-.PHONY: all bitstream bitstream-load bios bios-clean clean nuke
+.PHONY: all test bitstream bitstream-load bios bios-clean clean nuke
