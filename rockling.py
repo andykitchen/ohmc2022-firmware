@@ -98,7 +98,6 @@ class BaseSoC(SoCCore, AutoDoc):
         self.submodules.rgb = SBLED(platform.revision, platform.request("rgb_led"))
 
         self.submodules.i2s = I2S(platform.request('i2s'))
-        platform.add_period_constraint(self.i2s.cd_i2s_sclk.clk, 1e9/(64*48e3))
 
         self.submodules.dac_latch = GPIOOut(platform.request('dac_latch'))
 

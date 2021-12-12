@@ -11,7 +11,7 @@ bitstream: build/rockling/gateware/rockling.bin
 bitstream-load: build/rockling/gateware/rockling.bin
 	dfu-util -D build/rockling/gateware/rockling.bin
 
-build/rockling/gateware/rockling.bin: rockling.py rockling_evt.py lxbuildenv.py custom-bios/* | venv
+build/rockling/gateware/rockling.bin: rockling.py rockling_evt.py lxbuildenv.py custom-bios/* rtl/*.py | venv
 	( . venv/bin/activate && python rockling.py $(BITSTREAM_FLAGS) )
 
 venv:
