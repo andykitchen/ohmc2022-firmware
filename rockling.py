@@ -157,8 +157,8 @@ def setup_yosys(platform, pnr_seed):
     # Allow us to set the nextpnr seed
     platform.toolchain.build_template[1] += " --seed " + str(pnr_seed)
 
-    #placer = "heap"
-    #platform.toolchain.build_template[1] += " --placer {}".format(placer)
+    placer = "heap"
+    platform.toolchain.build_template[1] += " --placer {}".format(placer)
 
 
 class MinimalBuilder(Builder):
