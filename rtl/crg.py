@@ -34,6 +34,15 @@ class FomuClockResourceGenerator(Module, AutoDoc):
         clk48_raw = platform.request("clk48")
         clk12 = Signal()
 
+        clk48_gb = Signal()
+
+        # Put clock signal into a global buffer
+        self.specials += Instance(
+            "SB_GB_IO",
+            i_PACKAGE_PIN = clk48_raw,
+            o_GLOBAL_BUFFER_OUTPUT = clk48_gb
+        )
+
         reset_delay = Signal(12, reset=4095)
         self.clock_domains.cd_por = ClockDomain()
         self.reset = Signal()
@@ -48,7 +57,7 @@ class FomuClockResourceGenerator(Module, AutoDoc):
         platform.add_period_constraint(self.cd_usb_48.clk, 1e9/48e6)
         platform.add_period_constraint(self.cd_sys.clk, 1e9/12e6)
         platform.add_period_constraint(self.cd_usb_12.clk, 1e9/12e6)
-        platform.add_period_constraint(clk48_raw, 1e9/48e6)
+        platform.add_period_constraint(clk48_gb, 1e9/48e6)
 
         # POR reset logic- POR generated from sys clk, POR logic feeds sys clk
         # reset.
@@ -64,11 +73,11 @@ class FomuClockResourceGenerator(Module, AutoDoc):
             self.cd_usb_48.rst.eq(reset_delay != 0),
         ]
 
-        self.comb += self.cd_usb_48.clk.eq(clk48_raw)
+        self.comb += self.cd_usb_48.clk.eq(clk48_gb)
 
         self.specials += Instance(
             "SB_PLL40_CORE",
-            # Parameters
+            # Parameters for 12MHz
             p_DIVR = 0,
             p_DIVF = 15,
             p_DIVQ = 5,
@@ -82,9 +91,9 @@ class FomuClockResourceGenerator(Module, AutoDoc):
             p_PLLOUT_SELECT = "GENCLK_HALF",
             p_ENABLE_ICEGATE = 0,
             # IO
-            i_REFERENCECLK = clk48_raw,
-            o_PLLOUTCORE = clk12,
-            # o_PLLOUTGLOBAL = clk12,
+            i_REFERENCECLK = clk48_gb,
+            #o_PLLOUTCORE = clk12,
+            o_PLLOUTGLOBAL = clk12,
             #i_EXTFEEDBACK,
             #i_DYNAMICDELAY,
             #o_LOCK,
