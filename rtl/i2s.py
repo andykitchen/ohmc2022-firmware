@@ -38,35 +38,40 @@ class I2S(Module, AutoCSR, AutoDoc):
         right      = self.sample.fields.right
 
         # Core state
+        # these change what the core will do on any given cycle
         init       = Signal(reset=1)                       # is this the first cycle after a reset?
         shiftreg   = Signal(SAMPLE_BITS, reset_less=True)  # shift register for outgoing data (including padding bit)
         buffer     = Signal(SAMPLE_BITS, reset_less=True)  # buffer data other channel waiting to go out
+        # shiftreg and buffer don't need reset lines because their contents is transient (will be set the first cycle after a reset anyway)
 
         clk_scale  = Signal(SCLK_PRESCALE_BITS + LR_PRESCALE_BITS)
         next_sclk  = clk_scale[SCLK_PRESCALE_BITS-1]
         next_lrclk = clk_scale[SCLK_PRESCALE_BITS+LR_PRESCALE_BITS-1]
-        
+
+        # Output registers
+        # All outputs are registered to prevent glitching and so they come out well synchronised
         sclk       = Signal()
         lrclk      = Signal()
         dout       = Signal()
 
-        # Named internal logic signals
+        # Control logic signals
+        # These decode the state into useful control lines
         sclk_falling  = Signal()
         lrclk_rising  = Signal()
         lrclk_falling = Signal()
         begin_sample  = Signal()
 
         self.comb += [
-            sclk_falling.eq(~next_sclk & sclk),      # sclk will be low next cycle
-            lrclk_rising.eq(next_lrclk & ~lrclk),    # lrclk will be high on the next cycle (right channel is starting)
-            lrclk_falling.eq(~next_lrclk &  lrclk),  # lrclk will be low on the next cycle (left channel is starting)
-            begin_sample.eq(init | lrclk_falling),   # a new sample is starting next cycle
+            sclk_falling.eq(~next_sclk & sclk),     # sclk will be low next cycle
+            lrclk_rising.eq(next_lrclk & ~lrclk),   # lrclk will be high on the next cycle (right channel is starting)
+            lrclk_falling.eq(~next_lrclk & lrclk),  # lrclk will be low on the next cycle (left channel is starting)
+            begin_sample.eq(init | lrclk_falling),  # a new sample will begin next cycle
         ]
 
         # Wire up outputs
         self.comb += [
-            pads.mclk.eq(ClockSignal()),  # output sys clock on mclk (12MHz   = 256 * Fs)
-            pads.sclk.eq(sclk),           # output sclk              ( 3MHz   =  64 * Fs)
+            pads.mclk.eq(ClockSignal()),  # output sys clock on mclk (12.0MHz = 256 * Fs)
+            pads.sclk.eq(sclk),           # output sclk              ( 3.0MHz =  64 * Fs)
             pads.lrclk.eq(lrclk),         # output lrclk             (46.9kHz =   1 * Fs)
             pads.dout.eq(dout),           # output dout
         ]
@@ -77,7 +82,7 @@ class I2S(Module, AutoCSR, AutoDoc):
                 clk_scale.eq(clk_scale.reset),
                 sclk.eq(sclk.reset),
                 lrclk.eq(lrclk.reset),
-                dout.eq(dout.reset)
+                dout.eq(dout.reset),
             ).Else(
                 init.eq(0),
                 clk_scale.eq(clk_scale + 1),
@@ -86,15 +91,17 @@ class I2S(Module, AutoCSR, AutoDoc):
 
                 # update dout register on the falling edge of the sclk
                 If(sclk_falling, dout.eq(shiftreg[-1])),
+            ),
 
-                # When we begin a sample put the left channel data directly into the shift register
-                # and save the right channel data in a buffer
-                If(begin_sample, shiftreg.eq(left), buffer.eq(right))
-                    .Elif(lrclk_rising, shiftreg.eq(buffer))
-                    .Elif(sclk_falling, shiftreg.eq(shiftreg << 1)),
-                
-                # Clear the wait bit once the sample is read into shift register, otherwise set it on sample write.
-                If(begin_sample, wait.eq(0))
-                    .Elif(self.sample.re, wait.eq(1)),
-            )
+            # when we begin a sample put the left channel data directly into the shift register
+            # and save the right channel data in a buffer, when lrclk rises we move the buffered
+            # right channel data into the shift register
+            If(begin_sample, shiftreg.eq(left), buffer.eq(right))
+                .Elif(sclk_falling,
+                    If(lrclk_rising, shiftreg.eq(buffer))
+                    .Else(shiftreg.eq(shiftreg << 1))),
+
+            # clear the wait bit once the sample is buffered, otherwise set the bit on sample write
+            If(begin_sample, wait.eq(0))
+                .Elif(self.sample.re, wait.eq(1)),
         ]
