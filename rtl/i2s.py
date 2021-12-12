@@ -77,6 +77,7 @@ class I2S(Module, AutoCSR, AutoDoc):
                 clk_scale.eq(clk_scale.reset),
                 sclk.eq(sclk.reset),
                 lrclk.eq(lrclk.reset),
+                dout.eq(dout.reset)
             ).Else(
                 init.eq(0),
                 clk_scale.eq(clk_scale + 1),
