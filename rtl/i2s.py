@@ -26,6 +26,9 @@ class I2S(Module, AutoCSR, AutoDoc):
         self.intro = ModuleDoc("""
         Minimal I2S Block
 
+        After the system powers on this core is held in reset, to start sending sclk, lrclk and data
+        write 0 to the `reset' field in the `control' csr register.
+
         Basic usage: write a sample into the `sample' register then busy loop on the `status' register
         until the wait bit is clear, then write a new value.
 
