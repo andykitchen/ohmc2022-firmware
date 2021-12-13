@@ -148,6 +148,9 @@ def setup_yosys(platform, pnr_seed):
     # and the "-dffe_min_ce_use 4" flag prevents Yosys from generating a
     # Clock Enable signal for a LUT that has fewer than 4 flip-flops.
     # This increases density, and lets us use the FPGA more efficiently.
+    # ANDYK: Generally the problems we have with synthesis have been to do with
+    # timing and not density, synthesis seems to be more reliable
+    # without these options even if uses slightly more cells
     #platform.toolchain.yosys_template[2] += " -relut -abc2 -dffe_min_ce_use 4 -relut"
 
     # Disable final deep-sleep power down so firmware words are loaded
@@ -197,12 +200,16 @@ def main():
         cpu_type = "femtorv"
         cpu_variant = "standard"
 
+    blockram_count = 30
+    blockram_kbit = 4096
+    max_block_ram_bytes = blockram_count * blockram_kbit//8
+
     if args.rom:
         rom_init = get_mem_data(args.rom, endianness='little')
         rom_size = 0x2000
     else:
         rom_init = []
-        rom_size = 0x2000
+        rom_size = max_block_ram_bytes
 
     if args.rw_rom:
         integrated_rom_mode = 'rw'
