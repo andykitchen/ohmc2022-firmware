@@ -1,19 +1,21 @@
+#include "stdint.h"
+
 #include "codec.h"
+#include "codec_reg.h"
 
 #include "util.h"
 #include "i2c.h"
 
-/* codec initialisation step */
+/* This struct represents a codec initialisation step */
 struct codec_init_step {
-	int reg;   /* register to initialise */
-	int clear; /* bits to clear */
-	int set;   /* bits to set */
+	uint16_t reg;   /* register address to write */
+	uint16_t clear; /* bits to clear (reg &= !x) */
+	uint16_t set;   /* bits to set   (reg |=  x) */
 };
-
 /* N.B. Clearing happens before setting so we can write a specific value to a multibit field
    by clearing the whole field then setting the desired bit pattern */
 
-static struct codec_init_step init_steps[] = {
+static const struct codec_init_step init_steps[] = {
 	{CHIP_ANA_POWER,     .clear = LINREG_SIMPLE_POWERUP | STARTUP_POWERUP },
 	{CHIP_ANA_POWER,     .set   = VDDC_CHRGPMP_POWERUP },
 	{CHIP_LINREG_CTRL,   .set   = VDDC_ASSN_OVRD | VDDC_MAN_ASSN },
@@ -22,11 +24,11 @@ static struct codec_init_step init_steps[] = {
 	{CHIP_LINE_OUT_CTRL, .clear = 0x0F00, .set = 0x0300 },
 };
 
-/* initialise CODEC
+/* initialise audio CODEC
  *
  * @returns zero or negative i2c error status code
  */
-int init_codec(void) {
+NOINLINE int codec_init(void) {
 	int ret, val;
 	struct codec_init_step init;
 

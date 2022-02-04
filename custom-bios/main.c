@@ -6,6 +6,7 @@
 #include "i2c.h"
 #include "dac.h"
 #include "codec.h"
+#include "codec_reg.h"
 
 volatile int debug_status;
 volatile int osc0_cycles_low;
@@ -32,6 +33,7 @@ int main(void) {
 	rgb_init();
 	dac_init();
 	i2c_init();
+	codec_init(); /* needs i2c */
 
 	debug_status = 2;
 
