@@ -13,4 +13,6 @@ extern volatile int debug_status;
 inline int LO(int x) { return (x & 0x00ff); }
 inline int HI(int x) { return (x & 0xff00) >> 8; }
 
+#define ARRAY_LEN(x) (sizeof(x) / sizeof(x[0]))
+
 #endif
