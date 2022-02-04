@@ -25,7 +25,7 @@ bios:
 bios-clean:
 	rm -rf ${BIOS_DIR}/*.[od] ${BIOS_DIR}/bios.bin ${BIOS_DIR}/bios.elf
 
-# NOTE: bitstream must be specially compiled, see README
+# NOTE: bitstream must be specially compiled to support hot reloading, see README
 bios-reload: bios
 	bash tools/hot_reload.sh
 
@@ -33,8 +33,7 @@ venv/bin/intercept-build: | venv
 	pip install scan-build
 
 compile_commands.json: venv/bin/intercept-build custom-bios/Makefile build/rockling/software/include/generated/variables.mak
-	make bios-clean
-	( . venv/bin/activate && intercept-build make bios )
+	( . venv/bin/activate && make bios-clean && intercept-build make bios )
 # FIXME is there a better way of doing this?
 	sed -i'' 's/"cc"/"riscv64-unknown-elf-gcc"/g' compile_commands.json
 
