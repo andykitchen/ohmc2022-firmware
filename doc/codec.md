@@ -49,3 +49,12 @@ and their answers (as far as I know) and the consequences:
 7.  Set LINEOUT bias current
     -   CHIP_LINE_OUT_CTRL bits 8:11 (OUT_CURRENT) set to 0x03 (0.36mA)
 8.  ...
+
+Additional notes
+
+- CHIP_PLL_CTRL register must be configured before setting CHIP_ANA_POWER:PLL_POWERUP
+- CHIP_ANA_POWER:PLL_POWERUP must be set before CHIP_CLK_CTRL:MCLK_FREQ is programmed to 0x3
+- If both VDDA ond VDDIO are < 3.0 V, then CHIP_ANA_POWER:VDDC_CHRGPMP_POWERUP must be cleared before analog blocks are powered up
+- CHIP_ANA_POWER:VDDC_CHRGPMP_POWERUP requires either CHIP_ANA_POWER:PLL_POWERUP or CLK_TOP_CTRL:ENABLE_INT_OSC to be set
+- CHIP_ANA_POWER:HEADPHONE_POWERUP and/or CHIP_ANA_POWER:LINEOUT_POWERUP should be set before clearing CHIP_ANA_POWER:VAG_POWERUP and remain set for 200 to 400 ms after CHIP_ANA_POWER:VAG_POWERUP cleared
+- CHIP_ANA_POWER:STARTUP_POWERUP can be cleared after reest, if VDDD externally powered
