@@ -1,1 +1,1 @@
-meson
+meson==0.62.2
