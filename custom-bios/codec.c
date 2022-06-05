@@ -39,7 +39,7 @@ NOINLINE int codec_init(void) {
 		ret = codec_read_txn(init.reg);
 
 		if (ret < 0)
-			return val;
+			return ret;
 
 		val = ret;
 		val &= ~init.clear;
@@ -48,7 +48,7 @@ NOINLINE int codec_init(void) {
 		ret = codec_write_txn(init.reg, val);
 
 		if (ret < 0)
-			return val;
+			return ret;
 	}
 
 	return 0;
