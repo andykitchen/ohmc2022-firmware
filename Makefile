@@ -3,21 +3,21 @@ BITSTREAM_FLAGS ?=
 
 all: bitstream
 
+venv:
+	git submodule update --init --recursive
+	bash setup-venv.sh
+
 bitstream: build/rockling/gateware/rockling.bin
 
 bitstream-load: build/rockling/gateware/rockling.bin
 	dfu-util -D build/rockling/gateware/rockling.bin
 
-build/rockling/gateware/rockling.bin: rockling.py rockling_evt.py lxbuildenv.py custom-bios/* | venv
-	( . venv/bin/activate && python rockling.py $(BITSTREAM_FLAGS) )
-
-venv:
-	git submodule update --init --recursive
-	bash setup-venv.sh
+build/rockling/gateware/rockling.bin: rockling.py rockling_evt.py lxbuildenv.py custom-bios/* rtl/*.py | venv
+	. venv/bin/activate && python rockling.py $(BITSTREAM_FLAGS)
 
 # NOTE: building the bitstream also builds the bios
-bios:
-	make -C ${BIOS_DIR} -f $(realpath custom-bios/Makefile)
+bios: | venv
+	. venv/bin/activate && make -C ${BIOS_DIR} -f $(realpath custom-bios/Makefile)
 
 bios-clean:
 	rm -rf ${BIOS_DIR}/*.[od] ${BIOS_DIR}/bios.bin ${BIOS_DIR}/bios.elf
@@ -31,7 +31,7 @@ venv/bin/intercept-build: | venv
 
 compile_commands.json: venv/bin/intercept-build custom-bios/Makefile build/rockling/software/include/generated/variables.mak
 	make bios-clean
-	( . venv/bin/activate && intercept-build make bios )
+	. venv/bin/activate && intercept-build make bios
 # FIXME is there a better way of doing this?
 	sed -i'' 's/"cc"/"riscv64-unknown-elf-gcc"/g' compile_commands.json
 
