@@ -10,6 +10,7 @@
 #include "i2c.h"
 #include "dac.h"
 #include "codec.h"
+#include "codec_reg.h"
 
 static struct eb_connection *eb;
 
